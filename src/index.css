@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@media print {
+  /* Hide sidebar and other non-report elements */
+  aside, 
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset main container for printing */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+    background: white !important;
+  }
+
+  /* Ensure the report page is centered and sized correctly */
+  .report-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    border: none !important;
+    page-break-after: always;
+  }
+
+  body {
+    background: white !important;
+  }
+}
