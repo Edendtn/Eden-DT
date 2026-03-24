@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import html2pdf from 'html2pdf.js';
 import jsPDF from 'jspdf';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import html2canvas from 'html2canvas';
 
 // --- Types ---
@@ -1936,6 +1937,7 @@ export default function App() {
           }
         `}} />
       </main>
+      <SpeedInsights />
     </div>
   );
 }
