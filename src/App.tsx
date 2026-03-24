@@ -23,6 +23,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import html2pdf from 'html2pdf.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // --- Types ---
 type SystemType = 'CHILLER' | 'COOLING_TOWER';
@@ -1936,6 +1937,7 @@ export default function App() {
           }
         `}} />
       </main>
+      <SpeedInsights />
     </div>
   );
 }
