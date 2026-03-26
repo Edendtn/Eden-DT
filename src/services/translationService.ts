@@ -50,13 +50,15 @@ export async function translateReportData(data: any, targetLang: 'EN' | 'VI') {
     introMicrobioDesc: data.introMicrobioDesc,
     towerRecommendations: data.towerRecommendations,
     chillerRecommendations: data.chillerRecommendations,
+    consumptionCooling: data.consumptionCooling?.map((s: any) => ({ name: s.name })),
+    consumptionChiller: data.consumptionChiller?.map((s: any) => ({ name: s.name })),
   };
 
   // Filter out empty fields to save tokens and avoid errors
   const filteredFields: any = {};
   Object.keys(fieldsToTranslate).forEach(key => {
     const val = fieldsToTranslate[key];
-    if (val && (typeof val === 'string' ? val.trim() !== '' : true)) {
+    if (val && (Array.isArray(val) ? val.length > 0 : (typeof val === 'string' ? val.trim() !== '' : true))) {
       filteredFields[key] = val;
     }
   });
@@ -72,6 +74,7 @@ export async function translateReportData(data: any, targetLang: 'EN' | 'VI') {
   3. Return the result in the exact same JSON structure as provided.
   4. If a field is already in the target language or is a proper noun that should not be translated, keep it as is.
   5. For recommendations, translate both "title" and "desc" fields.
+  6. For consumptionCooling and consumptionChiller, only translate the "name" field.
   
   Data to translate:
   ${JSON.stringify(filteredFields, null, 2)}`;
@@ -93,7 +96,14 @@ export async function translateReportData(data: any, targetLang: 'EN' | 'VI') {
     // Merge back into data
     const newData = { ...data };
     Object.keys(translated).forEach(key => {
-      (newData as any)[key] = translated[key];
+      if (key === 'consumptionCooling' || key === 'consumptionChiller') {
+        newData[key] = data[key].map((s: any, i: number) => ({
+          ...s,
+          name: translated[key][i]?.name || s.name
+        }));
+      } else {
+        (newData as any)[key] = translated[key];
+      }
     });
 
     return newData;
