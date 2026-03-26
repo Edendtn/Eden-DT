@@ -685,7 +685,7 @@ const calculateMetrics = (data: ReportData) => {
   const drift = data.circulationFlow * (0.05 / 100) * (data.manualLoadPercentage / 100);
   
   // Blowdown (B) = E / (COC - 1)
-  const blowdown = coc > 1 ? Math.max(0, (evaporation / (coc - 1)) - drift) : 0;
+  const blowdown = coc > 1 ? Math.max(0, (evaporation / (coc - 1))) : 0;
   
   // Makeup (M) = E + B + D
   const makeup = evaporation + blowdown + drift;
@@ -736,11 +736,11 @@ const calculateMetrics = (data: ReportData) => {
         kgYear = kgMonth * 12;
       } else if (chem.name === "Culligan Bio Guard 41H01" || chem.name === "NaOCl" || chem.name === "NaOCl 10%" || chem.name === "NaOCL") {
         if (chem.name.toUpperCase().includes("NAOCL")) {
-          kgDay = (chem.dosage * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * 24) / 1000;
+          kgDay = (chem.dosage/10 * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * 24) / 1000;
           kgMonth = kgDay * 30;
           kgYear = kgMonth * 12;
         } else {
-          kgMonth = (chem.dosage * data.systemVolume * 10) / 1000;
+          kgMonth = (chem.dosage * data.systemVolume * 8) / 1000;
           kgDay = kgMonth / 30;
           kgYear = kgMonth * 12;
         }
