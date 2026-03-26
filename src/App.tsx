@@ -684,7 +684,7 @@ const calculateMetrics = (data: ReportData) => {
   // Drift (D) = Circulation Flow * 0.05/100 * Operating Load/100
   const drift = data.circulationFlow * (0.05 / 100) * (data.manualLoadPercentage / 100);
   
-  // Blowdown (B) = E / (COC - 1) - D
+  // Blowdown (B) = E / (COC - 1)
   const blowdown = coc > 1 ? Math.max(0, (evaporation / (coc - 1)) - drift) : 0;
   
   // Makeup (M) = E + B + D
