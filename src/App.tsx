@@ -2072,9 +2072,9 @@ export default function App() {
                               <td className="p-1 text-center">{formatNumber(item.quantity)}</td>
                               <td className="p-1 text-center">{Number(item.operatingLoad) ? `${formatNumber(item.operatingLoad)}%` : "-"}</td>
                               <td className="p-1 text-center">{formatNumber(item.runningQuantity)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.totalGuard) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard41H01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100), 1)}</td>
+                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.totalGuard) * Number(item.runningQuantity), 1)}</td>
+                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard41H01) * Number(item.runningQuantity), 1)}</td>
+                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity), 1)}</td>
                             </tr>
                           ))}
                           <tr className="bg-indigo-50 font-black text-indigo-900">
@@ -2083,13 +2083,13 @@ export default function App() {
                             <td className="p-1 text-center">-</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.runningQuantity) || 0), 0))}</td>
                             <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0), 1)}
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0), 1)}
                             </td>
                             <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0), 1)}
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0), 1)}
                             </td>
                             <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0), 1)}
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
                             </td>
                           </tr>
                         </tbody>
@@ -2100,19 +2100,19 @@ export default function App() {
                         <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
                           <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingTotalGuardName)}</div>
                           <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0) * 12, 1)}
+                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
                           </div>
                         </div>
                         <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
                           <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuardName)}</div>
                           <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0) * 12, 1)}
+                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
                           </div>
                         </div>
                         <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
                           <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuard40Name)}</div>
                           <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0) * 12, 1)}
+                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
                           </div>
                         </div>
                       </div>
@@ -2167,8 +2167,8 @@ export default function App() {
                               <td className="p-1 text-center">{formatNumber(item.quantity)}</td>
                               <td className="p-1 text-center">{Number(item.operatingLoad) ? `${formatNumber(item.operatingLoad)}%` : "-"}</td>
                               <td className="p-1 text-center">{formatNumber(item.runningQuantity)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.corroGuard33L01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100), 1)}</td>
+                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.corroGuard33L01) * Number(item.runningQuantity), 1)}</td>
+                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity), 1)}</td>
                             </tr>
                           ))}
                           <tr className="bg-indigo-50 font-black text-indigo-900">
@@ -2177,10 +2177,10 @@ export default function App() {
                             <td className="p-1 text-center">-</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.runningQuantity) || 0), 0))}</td>
                             <td className="p-1 text-center">
-                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0), 1)}
+                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0), 1)}
                             </td>
                             <td className="p-1 text-center">
-                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0), 1)}
+                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
                             </td>
                           </tr>
                         </tbody>
@@ -2191,13 +2191,13 @@ export default function App() {
                         <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
                           <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerCorroGuardName)}</div>
                           <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0) * 12, 1)}
+                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
                           </div>
                         </div>
                         <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
                           <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerBioGuardName)}</div>
                           <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) * (Number(item.operatingLoad) / 100) || 0), 0) * 12, 1)}
+                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
                           </div>
                         </div>
                       </div>
