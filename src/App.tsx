@@ -925,7 +925,7 @@ export default function App() {
         // Fix types
         migrated.forEach(chem => {
           if (chem.name.includes("22C55")) chem.type = "dispersant";
-          else if (chem.name.includes("NAOCL")) || chem.name.includes("41H01")) chem.type = "oxidizing";
+          else if (chem.name.includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
           else if (chem.name.includes("Total Guard")) chem.type = "scaleCorrosion";
           else if (chem.name.includes("40H16")) chem.type = "nonOxidizing";
         });
