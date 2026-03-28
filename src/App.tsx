@@ -813,7 +813,7 @@ const calculateMetrics = (data: ReportData) => {
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
-        if (chem.name.toUpperCase().includes("NAOCL")) {
+        if (chem.name..includes("NAOCL") {
           kgDay = ((chem.dosage/10) * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * data.operatingHours) / 1000;
           kgMonth = kgDay * data.operatingDaysPerMonth;
           kgYear = kgMonth * 12;
@@ -925,7 +925,7 @@ export default function App() {
         // Fix types
         migrated.forEach(chem => {
           if (chem.name.includes("22C55")) chem.type = "dispersant";
-          else if (chem.name.toUpperCase().includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
+          else if (chem.name.includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
           else if (chem.name.includes("Total Guard")) chem.type = "scaleCorrosion";
           else if (chem.name.includes("40H16")) chem.type = "nonOxidizing";
         });
@@ -1176,7 +1176,7 @@ export default function App() {
       if (data.systemType === 'COOLING_TOWER') {
         if (value.includes("Total Guard")) updatedChem.type = "scaleCorrosion";
         else if (value.includes("22C55")) updatedChem.type = "dispersant";
-        else if (value.toUpperCase().includes("NAOCL") || value.includes("41H01")) updatedChem.type = "oxidizing";
+        else if (value.includes("NAOCL") || value.includes("41H01")) updatedChem.type = "oxidizing";
         else if (value.includes("40H16")) updatedChem.type = "nonOxidizing";
       } else {
         // Chiller
