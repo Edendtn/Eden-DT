@@ -64,7 +64,7 @@ const TRANSLATIONS = {
       introContent: 'Nội dung giới thiệu',
     },
     labels: {
-      pageNumber: 'Số trang',
+      pageNumber: 'Trang',
       customer: 'Khách hàng',
       project: 'Dự án',
       reportId: 'Mã báo cáo',
@@ -126,6 +126,7 @@ const TRANSLATIONS = {
       chillerTitle: 'Tiêu thụ hệ thống nước Chiller',
       kgMonth: 'kg/tháng',
       descTotalGuard: 'Hóa chất ức chế ăn mòn và cáu cặn đa năng cho hệ thống giải nhiệt hở.',
+      descDepositGuard: 'Hóa chất ức chế cáu cặn và phân tán bùn sét, ngăn ngừa lắng đọng.',
       descBioGuard41: 'Hóa chất diệt khuẩn dạng oxy hóa mạnh, kiểm soát rong rêu và vi sinh vật.',
       descBioGuard40: 'Culligan Bio Guard 40H16: Hóa chất diệt khuẩn dạng không oxy hóa, hiệu quả cao trong việc kiểm soát màng sinh học.',
       descCorroGuard: 'Hóa chất ức chế ăn mòn và cáu cặn chuyên dụng cho hệ thống nước lạnh kín (Chilled water).',
@@ -203,11 +204,13 @@ const TRANSLATIONS = {
       kgMonth: 'Kg/M',
       kgYear: 'Kg/Y',
       techRecommendations: 'Khuyến nghị kỹ thuật',
+      waterStandardNote: '* Ghi chú: Tiêu chuẩn được thiết lập dựa trên chất lượng nước cấp bổ sung và kinh nghiệm Culligan',
     },
     chemicals: {
       corrosionScale: 'Kiểm soát ngăn ngừa ăn mòn cáu cặn',
       microbiological: 'Kiểm soát vi sinh',
       scaleCorrosion: 'Kiểm soát cáu cặn và ăn mòn',
+      dispersant: 'Chất phân tán',
       oxidizing: 'Diệt vi sinh oxy hóa',
       nonOxidizing: 'Diệt vi sinh không oxy hóa',
     },
@@ -261,7 +264,7 @@ const TRANSLATIONS = {
       introContent: 'Intro Content',
     },
     labels: {
-      pageNumber: 'Page Number',
+      pageNumber: 'Page',
       customer: 'Customer',
       project: 'Project',
       reportId: 'Report ID',
@@ -323,6 +326,7 @@ const TRANSLATIONS = {
       chillerTitle: 'Chiller Water Systems Consumption',
       kgMonth: 'kg/month',
       descTotalGuard: 'Multipurpose corrosion and scale inhibitor for open cooling systems.',
+      descDepositGuard: 'Scale inhibitor and dispersant for cooling systems, preventing deposits.',
       descBioGuard41: 'Strong oxidizing biocide, controls algae and microorganisms.',
       descBioGuard40: 'Culligan Bio Guard 40H16: Non-oxidizing biocide, highly effective in biofilm control.',
       descCorroGuard: 'Specialized corrosion and scale inhibitor for closed chilled water systems.',
@@ -400,11 +404,13 @@ const TRANSLATIONS = {
       kgMonth: 'Kg/M',
       kgYear: 'Kg/Y',
       techRecommendations: 'Technical Recommendations',
+      waterStandardNote: '* Note: Standards are established based on makeup water quality and Culligan experience',
     },
     chemicals: {
       corrosionScale: 'Corrosion & Scale Control',
       microbiological: 'Microbiological Control',
       scaleCorrosion: 'Scale & Corrosion Control',
+      dispersant: 'Dispersant',
       oxidizing: 'Oxidizing Biocide',
       nonOxidizing: 'Non-Oxidizing Biocide',
     },
@@ -449,6 +455,7 @@ interface ConsumptionSystem {
   operatingLoad: number; // Tải hoạt động (%)
   runningQuantity: number; // Số lượng chạy
   totalGuard: number; // Culligan Total Guard 20C04/20C23
+  depositGuard: number; // Culligan Deposit Guard 22C55
   bioGuard41H01: number; // Culligan Bio Guard 41H01
   bioGuard40H16: number; // Culligan Bio Guard 40H16
   corroGuard33L01: number; // Culligan Corro Guard 33L01
@@ -505,17 +512,26 @@ interface ReportData {
   measuredMildSteelCorrosionTower: number;
   measuredCopperCorrosionTower: number;
   measuredTurbidityTower: number;
+  measuredCodTower: number;
+  measuredBacteriaTower: string;
   samplingDate: string;
+  samplingTimeHeader: string;
+  samplingNote: string;
   systemLeakage: number;
   manualLoadPercentage: number;
   summaryTitle: string;
   summaryValue: string;
   summaryUnit: string;
   coolingTotalGuardName: string;
+  coolingDepositGuardName: string;
   coolingBioGuardName: string;
   coolingBioGuard40Name: string;
   chillerCorroGuardName: string;
   chillerBioGuardName: string;
+
+  // Standards
+  towerStandards: Record<string, string>;
+  chillerStandards: Record<string, string>;
 
   // Chemicals
   chillerChemicals: ChemicalRow[];
@@ -532,16 +548,17 @@ interface ReportData {
   chillerOperatingNotes: string;
   towerOperatingNotes: string;
 
-  // Consumption Data
-  consumptionCooling: ConsumptionSystem[];
-  consumptionChiller: ConsumptionSystem[];
-
   // Chemical Descriptions (Editable)
   descTotalGuard: string;
+  descDepositGuard: string;
   descBioGuard41: string;
   descBioGuard40: string;
   descCorroGuard: string;
   descBioGuard40Chiller: string;
+
+  // Consumption Data
+  consumptionCooling: ConsumptionSystem[];
+  consumptionChiller: ConsumptionSystem[];
 
   // Intro Content (Editable)
   introAboutTitle: string;
@@ -609,27 +626,65 @@ const INITIAL_DATA: ReportData = {
   measuredMildSteelCorrosionTower: 0.5,
   measuredCopperCorrosionTower: 0.1,
   measuredTurbidityTower: 5,
+  measuredCodTower: 0,
+  measuredBacteriaTower: "< 10^3",
   samplingDate: new Date().toLocaleDateString('en-GB'),
+  samplingTimeHeader: "Result",
+  samplingNote: "Mẫu được lấy ngày 28.03.2026",
   systemLeakage: 0.5,
   manualLoadPercentage: 85,
   summaryTitle: "System Efficiency Index",
   summaryValue: "85.0",
   summaryUnit: "%",
   coolingTotalGuardName: "Culligan Total Guard 20C04",
+  coolingDepositGuardName: "Culligan Deposit Guard 22C55",
   coolingBioGuardName: "Culligan Bio Guard 41H01",
   coolingBioGuard40Name: "Culligan Bio Guard 40H16",
   chillerCorroGuardName: "Culligan Corro Guard 33L01",
   chillerBioGuardName: "Culligan Bio Guard 40H16",
 
+  towerStandards: {
+    ph: "7.0 - 8.7",
+    turbidity: "< 20",
+    conductivity: "< 2500",
+    hardness: "< 500",
+    alkalinity: "< 400",
+    iron: "< 2.0",
+    silica: "< 150",
+    chlorides: "< 300",
+    freeChloride: "0.1 - 0.3",
+    bacteria: "< 10^4",
+    cycle: "4.5 - 5.0",
+    phosphate: "4.0 - 10.0",
+    lsi: "0.5 - 2.0",
+    msCorr: "< 3.0",
+    cuCorr: "< 1.0",
+    cod: "< 50"
+  },
+  chillerStandards: {
+    ph: "8.5 - 10.5",
+    conductivity: "< 10,000",
+    alkalinity: "100 - 300",
+    chlorides: "< 80",
+    iron: "< 2.0",
+    copper: "< 0.2",
+    bacteria: "< 10^4",
+    nitrite: "700 - 1500",
+    sulfate: "< 20",
+    cuCorr: "0.25 max",
+    msCorr: "0.5 max"
+  },
+
   chillerChemicals: [
-    { name: "Culligan Corro Guard 33L01", type: "corrosionScale", dosage: 3000, kgDay: 0, kgMonth: 0, kgYear: 0, kgInitial: 0 },
-    { name: "Culligan Bio Guard 40H16", type: "microbiological", dosage: 50, kgDay: 0, kgMonth: 0, kgYear: 0 }
+    { name: "Culligan Corro Guard 33L01", type: "corrosionScale", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0, kgInitial: 0 },
+    { name: "Culligan Bio Guard 40H16", type: "microbiological", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0 }
   ],
 
   towerChemicals: [
-    { name: "Culligan Total Guard 20C04", type: "scaleCorrosion", dosage: 60, kgDay: 0, kgMonth: 0, kgYear: 0 },
-    { name: "Culligan Bio Guard 41H01", type: "oxidizing", dosage: 25, kgDay: 0, kgMonth: 0, kgYear: 0 },
-    { name: "Culligan Bio Guard 40H16", type: "nonOxidizing", dosage: 50, kgDay: 0, kgMonth: 0, kgYear: 0 }
+    { name: "Culligan Total Guard 20C04", type: "scaleCorrosion", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0 },
+    { name: "Culligan Deposit Guard 22C55", type: "dispersant", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0 },
+    { name: "Culligan Bio Guard 41H01", type: "oxidizing", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0 },
+    { name: "Culligan Bio Guard 40H16", type: "nonOxidizing", dosage: 0, kgDay: 0, kgMonth: 0, kgYear: 0 }
   ],
 
   chillerRecommendations: [
@@ -650,21 +705,22 @@ const INITIAL_DATA: ReportData = {
   
   chillerOperatingNotes: "Cách châm hóa chất:\n+ Culligan Corro Guard 33L01: châm định kì hằng tháng bằng thiết bị theo chỉ dẫn\n+ Culligan Bio Guard 40H16: châm định kì hằng tuần/tháng bằng thiết bị theo chỉ dẫn\n*kg/lần: chỉ áp dụng cho những hệ thống mới\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
   
-  towerOperatingNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
+  towerOperatingNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Deposit Guard 22C55: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
   
   consumptionCooling: [
-    { name: "Tower 1", quantity: 1, operatingLoad: 80, runningQuantity: 1, totalGuard: 0, bioGuard41H01: 0, bioGuard40H16: 0, corroGuard33L01: 0 },
+    { name: "Tower 1", quantity: 1, operatingLoad: 80, runningQuantity: 1, totalGuard: 0, depositGuard: 0, bioGuard41H01: 0, bioGuard40H16: 0, corroGuard33L01: 0 },
   ],
   consumptionChiller: [
-    { name: "Chiller 1", quantity: 1, operatingLoad: 80, runningQuantity: 1, totalGuard: 0, bioGuard41H01: 0, bioGuard40H16: 0, corroGuard33L01: 0 },
+    { name: "Chiller 1", quantity: 1, operatingLoad: 80, runningQuantity: 1, totalGuard: 0, depositGuard: 0, bioGuard41H01: 0, bioGuard40H16: 0, corroGuard33L01: 0 },
   ],
 
   // Chemical Descriptions Defaults
-  descTotalGuard: "Multipurpose corrosion and scale inhibitor for open cooling systems.",
-  descBioGuard41: "Strong oxidizing biocide, controls algae and microorganisms.",
-  descBioGuard40: "Culligan Bio Guard 40H16: Non-oxidizing biocide, highly effective in biofilm control.",
-  descCorroGuard: "Specialized corrosion and scale inhibitor for closed chilled water systems.",
-  descBioGuard40Chiller: "Culligan Bio Guard 40H16: Non-oxidizing biocide, highly effective in biofilm control.",
+  descTotalGuard: "Hóa chất ức chế ăn mòn và cáu cặn đa năng cho hệ thống giải nhiệt hở.",
+  descDepositGuard: "Chất phân tán, ngăn ngừa lắng đọng cáu cặn cho hệ thống giải nhiệt.",
+  descBioGuard41: "Diệt vi sinh oxy hóa, kiểm soát rong rêu và vi sinh vật.",
+  descBioGuard40: "Diệt vi sinh không oxy hóa, hiệu cao trong việc kiểm soát màng sinh học.",
+  descCorroGuard: "Hóa chất ức chế ăn mòn và cáu cặn chuyên dụng cho hệ thống Chiller kín.",
+  descBioGuard40Chiller: "Diệt vi sinh không oxy hóa, hiệu cao trong việc kiểm soát màng sinh học.",
 
   // Intro Defaults (will be overwritten by translation-based init if needed)
   introAboutTitle: "Culligan - Chuyên gia Xử lý Nước Công nghiệp",
@@ -746,7 +802,14 @@ const calculateMetrics = (data: ReportData) => {
       }
     } else {
       // COOLING TOWER
-      if (chem.name === data.coolingTotalGuardName || chem.name === "Culligan Total Guard 20C23" || chem.name === "Culligan Total Guard 20C24") {
+      if (chem.name === data.coolingTotalGuardName || 
+          chem.name === "Culligan Total Guard 20C23" || 
+          chem.name === "Culligan Total Guard 20C24") {
+        kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
+        kgMonth = kgDay * data.operatingDaysPerMonth;
+        kgYear = kgMonth * 12;
+      } else if (chem.name === data.coolingDepositGuardName || chem.name.includes("22C55")) {
+        // Formula: kg/day = (Blowdown * Dosage * Operating Hour) / 1000
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
@@ -853,6 +916,22 @@ export default function App() {
     const saved = localStorage.getItem('culligan_current_data');
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Migrate towerChemicals if needed
+      if (parsed.towerChemicals) {
+        const migrated = [...parsed.towerChemicals];
+        // Ensure 4 items
+        while (migrated.length < 4) {
+          migrated.push(INITIAL_DATA.towerChemicals[migrated.length]);
+        }
+        // Fix types
+        migrated.forEach(chem => {
+          if (chem.name.includes("22C55")) chem.type = "dispersant";
+          else if (chem.name.toUpperCase().includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
+          else if (chem.name.includes("Total Guard")) chem.type = "scaleCorrosion";
+          else if (chem.name.includes("40H16")) chem.type = "nonOxidizing";
+        });
+        parsed.towerChemicals = migrated;
+      }
       return { ...INITIAL_DATA, ...parsed };
     }
     
@@ -1090,7 +1169,24 @@ export default function App() {
     const fieldName = data.systemType === 'CHILLER' ? 'chillerChemicals' : 'towerChemicals';
     const newChems = [...data[fieldName]];
     const oldName = newChems[index].name;
-    newChems[index] = { ...newChems[index], [field]: value };
+    
+    let updatedChem = { ...newChems[index], [field]: value };
+    
+    // Auto-update type if name changes
+    if (field === 'name') {
+      if (data.systemType === 'COOLING_TOWER') {
+        if (value.includes("Total Guard")) updatedChem.type = "scaleCorrosion";
+        else if (value.includes("22C55")) updatedChem.type = "dispersant";
+        else if (value.toUpperCase().includes("NAOCL") || value.includes("41H01")) updatedChem.type = "oxidizing";
+        else if (value.includes("40H16")) updatedChem.type = "nonOxidizing";
+      } else {
+        // Chiller
+        if (value.includes("33L01")) updatedChem.type = "corrosionScale";
+        else if (value.includes("40H16")) updatedChem.type = "microbiological";
+      }
+    }
+    
+    newChems[index] = updatedChem;
     
     let newData = { ...data, [fieldName]: newChems };
     
@@ -1277,6 +1373,8 @@ export default function App() {
                   <InputField label={t.labels.summaryTitle} value={data.summaryTitle} onChange={(v: any) => setData({...data, summaryTitle: v})} />
                   <InputField label={t.labels.summaryValue} value={data.summaryValue} onChange={(v: any) => setData({...data, summaryValue: v})} />
                   <InputField label={t.labels.summaryUnit} value={data.summaryUnit} onChange={(v: any) => setData({...data, summaryUnit: v})} />
+                  <InputField label="Table Header (Result)" value={data.samplingTimeHeader} onChange={(v: any) => setData({...data, samplingTimeHeader: v})} />
+                  <InputField label="Sampling Note" value={data.samplingNote} onChange={(v: any) => setData({...data, samplingNote: v})} />
                 </div>
               </section>
 
@@ -1312,36 +1410,81 @@ export default function App() {
                   <Droplets className="w-4 h-4" />
                   <h2 className="text-xs font-black uppercase tracking-widest">{t.sections.chemistry}</h2>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <InputField label={t.labels.phLevel} type="number" value={data.measuredPh} onChange={(v: any) => setData({...data, measuredPh: v})} />
-                  {data.systemType === 'COOLING_TOWER' && (
-                    <InputField label={t.labels.turbidity} type="number" value={data.measuredTurbidityTower} onChange={(v: any) => setData({...data, measuredTurbidityTower: v})} />
-                  )}
-                  <InputField label={t.labels.conductivity} type="number" value={data.measuredConductivity} onChange={(v: any) => setData({...data, measuredConductivity: v})} />
-                  {data.systemType === 'COOLING_TOWER' ? (
-                    <>
-                      <InputField label={t.labels.hardness} type="number" value={data.measuredHardness} onChange={(v: any) => setData({...data, measuredHardness: v})} />
-                      <InputField label={t.labels.silica} type="number" value={data.measuredSilica} onChange={(v: any) => setData({...data, measuredSilica: v})} />
-                      <InputField label={t.labels.lsiIndex} type="number" value={data.measuredLsi} onChange={(v: any) => setData({...data, measuredLsi: v})} />
-                      <InputField label={t.labels.phosphate} type="number" value={data.measuredPhosphate} onChange={(v: any) => setData({...data, measuredPhosphate: v})} />
-                      <InputField label={t.labels.msCorrTower} type="number" value={data.measuredMildSteelCorrosionTower} onChange={(v: any) => setData({...data, measuredMildSteelCorrosionTower: v})} />
-                      <InputField label={t.labels.cuCorrTower} type="number" value={data.measuredCopperCorrosionTower} onChange={(v: any) => setData({...data, measuredCopperCorrosionTower: v})} />
-                      <InputField label={t.labels.freeChloride} type="number" value={data.measuredFreeChloride} onChange={(v: any) => setData({...data, measuredFreeChloride: v})} />
-                      <InputField label={t.labels.cycle} value={data.cocLimit} onChange={(v: any) => setData({...data, cocLimit: v})} />
-                    </>
-                  ) : (
-                    <>
-                      <InputField label={t.labels.sulfate} type="number" value={data.measuredSulfate} onChange={(v: any) => setData({...data, measuredSulfate: v})} />
-                      <InputField label={t.labels.nitrite} type="number" value={data.measuredNitrite} onChange={(v: any) => setData({...data, measuredNitrite: v})} />
-                      <InputField label={t.labels.cuCorr} type="number" value={data.measuredCopperCorrosion} onChange={(v: any) => setData({...data, measuredCopperCorrosion: v})} />
-                      <InputField label={t.labels.msCorr} type="number" value={data.measuredMildSteelCorrosion} onChange={(v: any) => setData({...data, measuredMildSteelCorrosion: v})} />
-                    </>
-                  )}
-                  <InputField label={t.labels.alkalinity} type="number" value={data.measuredMAlk} onChange={(v: any) => setData({...data, measuredMAlk: v})} />
-                  <InputField label={t.labels.chlorides} type="number" value={data.measuredChlorides} onChange={(v: any) => setData({...data, measuredChlorides: v})} />
-                  <InputField label={t.labels.iron} type="number" value={data.measuredIron} onChange={(v: any) => setData({...data, measuredIron: v})} />
-                  <div className="col-span-2">
-                    <InputField label={t.labels.samplingDate} value={data.samplingDate} onChange={(v: any) => setData({...data, samplingDate: v})} />
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                      <h3 className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">SAMPLING DATE (MEASURED)</h3>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase">Input Values</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <InputField label={t.labels.phLevel} type="number" value={data.measuredPh} onChange={(v: any) => setData({...data, measuredPh: v})} />
+                      {data.systemType === 'COOLING_TOWER' && (
+                        <InputField label={t.labels.turbidity} type="number" value={data.measuredTurbidityTower} onChange={(v: any) => setData({...data, measuredTurbidityTower: v})} />
+                      )}
+                      <InputField label={t.labels.conductivity} type="number" value={data.measuredConductivity} onChange={(v: any) => setData({...data, measuredConductivity: v})} />
+                      {data.systemType === 'COOLING_TOWER' ? (
+                        <>
+                          <InputField label={t.labels.hardness} type="number" value={data.measuredHardness} onChange={(v: any) => setData({...data, measuredHardness: v})} />
+                          <InputField label={t.labels.silica} type="number" value={data.measuredSilica} onChange={(v: any) => setData({...data, measuredSilica: v})} />
+                          <InputField label={t.labels.lsiIndex} type="number" value={data.measuredLsi} onChange={(v: any) => setData({...data, measuredLsi: v})} />
+                          <InputField label={t.labels.phosphate} type="number" value={data.measuredPhosphate} onChange={(v: any) => setData({...data, measuredPhosphate: v})} />
+                          <InputField label={t.labels.msCorrTower} type="number" value={data.measuredMildSteelCorrosionTower} onChange={(v: any) => setData({...data, measuredMildSteelCorrosionTower: v})} />
+                          <InputField label={t.labels.cuCorrTower} type="number" value={data.measuredCopperCorrosionTower} onChange={(v: any) => setData({...data, measuredCopperCorrosionTower: v})} />
+                          <InputField label={t.labels.freeChloride} type="number" value={data.measuredFreeChloride} onChange={(v: any) => setData({...data, measuredFreeChloride: v})} />
+                          <InputField label="Bacteria" value={data.measuredBacteriaTower} onChange={(v: any) => setData({...data, measuredBacteriaTower: v})} />
+                          <InputField label="COD" type="number" value={data.measuredCodTower} onChange={(v: any) => setData({...data, measuredCodTower: v})} />
+                          <InputField label={t.labels.cycle} value={data.cocLimit} onChange={(v: any) => setData({...data, cocLimit: v})} />
+                        </>
+                      ) : (
+                        <>
+                          <InputField label={t.labels.sulfate} type="number" value={data.measuredSulfate} onChange={(v: any) => setData({...data, measuredSulfate: v})} />
+                          <InputField label={t.labels.nitrite} type="number" value={data.measuredNitrite} onChange={(v: any) => setData({...data, measuredNitrite: v})} />
+                          <InputField label={t.labels.cuCorr} type="number" value={data.measuredCopperCorrosion} onChange={(v: any) => setData({...data, measuredCopperCorrosion: v})} />
+                          <InputField label={t.labels.msCorr} type="number" value={data.measuredMildSteelCorrosion} onChange={(v: any) => setData({...data, measuredMildSteelCorrosion: v})} />
+                          <InputField label={t.labels.copper} type="number" value={data.measuredCopper} onChange={(v: any) => setData({...data, measuredCopper: v})} />
+                          <InputField label={t.labels.bacteria} value={data.measuredBacteria} onChange={(v: any) => setData({...data, measuredBacteria: v})} />
+                        </>
+                      )}
+                      <InputField label={t.labels.alkalinity} type="number" value={data.measuredMAlk} onChange={(v: any) => setData({...data, measuredMAlk: v})} />
+                      <InputField label={t.labels.chlorides} type="number" value={data.measuredChlorides} onChange={(v: any) => setData({...data, measuredChlorides: v})} />
+                      <InputField label={t.labels.iron} type="number" value={data.measuredIron} onChange={(v: any) => setData({...data, measuredIron: v})} />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <div className="flex items-center gap-2 text-indigo-600">
+                  <Settings2 className="w-4 h-4" />
+                  <h2 className="text-xs font-black uppercase tracking-widest">Water Quality Standards</h2>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <div className="grid grid-cols-2 gap-3">
+                    {data.systemType === 'COOLING_TOWER' ? (
+                      Object.entries(data.towerStandards).map(([key, val]) => (
+                        <InputField 
+                          key={key} 
+                          label={key.toUpperCase()} 
+                          value={val} 
+                          onChange={(v: any) => setData({
+                            ...data, 
+                            towerStandards: { ...data.towerStandards, [key]: v }
+                          })} 
+                        />
+                      ))
+                    ) : (
+                      Object.entries(data.chillerStandards).map(([key, val]) => (
+                        <InputField 
+                          key={key} 
+                          label={key.toUpperCase()} 
+                          value={val} 
+                          onChange={(v: any) => setData({
+                            ...data, 
+                            chillerStandards: { ...data.chillerStandards, [key]: v }
+                          })} 
+                        />
+                      ))
+                    )}
                   </div>
                 </div>
               </section>
@@ -1372,33 +1515,44 @@ export default function App() {
                 <div className="space-y-3">
                   {(data.systemType === 'CHILLER' ? data.chillerChemicals : data.towerChemicals).map((chem, i) => (
                     <div key={i} className="p-3 bg-slate-50 rounded-lg space-y-2">
-                      {chem.name.includes("Total Guard 20C") ? (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">{t.report.chemical}</label>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">{t.report.chemical}</label>
+                        {data.systemType === 'COOLING_TOWER' ? (
                           <select 
                             value={chem.name}
                             onChange={(e) => updateChemical(i, 'name', e.target.value)}
                             className="w-full bg-white border border-slate-200 px-2 py-1.5 text-sm font-medium focus:ring-0 focus:border-indigo-500 transition-colors rounded-md"
                           >
-                            <option value="Culligan Total Guard 20C04">Culligan Total Guard 20C04</option>
-                            <option value="Culligan Total Guard 20C23">Culligan Total Guard 20C23</option>
+                            {i === 0 ? (
+                              <>
+                                <option value="Culligan Total Guard 20C04">Culligan Total Guard 20C04</option>
+                                <option value="Culligan Total Guard 20C23">Culligan Total Guard 20C23</option>
+                                <option value="Culligan Total Guard 20C24">Culligan Total Guard 20C24</option>
+                              </>
+                            ) : i === 1 ? (
+                              <>
+                                <option value="Culligan Deposit Guard 22C55">Culligan Deposit Guard 22C55</option>
+                              </>
+                            ) : i === 2 ? (
+                              <>
+                                <option value="Culligan Bio Guard 41H01">Culligan Bio Guard 41H01</option>
+                                <option value="NaOCl 10%">NaOCl 10%</option>
+                              </>
+                            ) : (
+                              <>
+                                <option value="Culligan Bio Guard 40H16">Culligan Bio Guard 40H16</option>
+                              </>
+                            )}
                           </select>
-                        </div>
-                      ) : chem.name === "Culligan Bio Guard 41H01" || chem.name === "NaOCl" ? (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">{t.report.chemical}</label>
-                          <select 
+                        ) : (
+                          <input 
+                            type="text"
                             value={chem.name}
                             onChange={(e) => updateChemical(i, 'name', e.target.value)}
                             className="w-full bg-white border border-slate-200 px-2 py-1.5 text-sm font-medium focus:ring-0 focus:border-indigo-500 transition-colors rounded-md"
-                          >
-                            <option value="Culligan Bio Guard 41H01">Culligan Bio Guard 41H01</option>
-                            <option value="NaOCl">NaOCl</option>
-                          </select>
-                        </div>
-                      ) : (
-                        <div className="text-[10px] font-bold text-slate-800 uppercase">{chem.name}</div>
-                      )}
+                          />
+                        )}
+                      </div>
                       <InputField label={t.labels.dosage} type="number" value={chem.dosage} onChange={(v: any) => updateChemical(i, 'dosage', v)} />
                     </div>
                   ))}
@@ -1464,6 +1618,10 @@ export default function App() {
                       <TextAreaField label="Description" value={data.descTotalGuard} onChange={(v: string) => setData({...data, descTotalGuard: v})} />
                     </div>
                     <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <InputField label="Name (Deposit Guard)" value={data.coolingDepositGuardName} onChange={(v: string) => setData({...data, coolingDepositGuardName: v})} />
+                      <TextAreaField label="Description" value={data.descDepositGuard} onChange={(v: string) => setData({...data, descDepositGuard: v})} />
+                    </div>
+                    <div className="space-y-2 pt-2 border-t border-slate-200">
                       <InputField label="Name (Bio Guard 41)" value={data.coolingBioGuardName} onChange={(v: string) => setData({...data, coolingBioGuardName: v})} />
                       <TextAreaField label="Description" value={data.descBioGuard41} onChange={(v: string) => setData({...data, descBioGuard41: v})} />
                     </div>
@@ -1523,6 +1681,7 @@ export default function App() {
                           operatingLoad: 80,
                           runningQuantity: 1,
                           totalGuard: 0,
+                          depositGuard: 0,
                           bioGuard41H01: 0,
                           bioGuard40H16: 0,
                           corroGuard33L01: 0
@@ -1574,19 +1733,6 @@ export default function App() {
                             />
                           </div>
                           <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.labels.load}</label>
-                            <input 
-                              type="number"
-                              value={item.operatingLoad}
-                              onChange={(e) => {
-                                const newList = [...data.consumptionCooling];
-                                newList[idx] = { ...newList[idx], operatingLoad: parseFloat(e.target.value) || 0 };
-                                setData({ ...data, consumptionCooling: newList });
-                              }}
-                              className="w-full text-xs border-b border-slate-100 focus:border-indigo-500 outline-none py-1"
-                            />
-                          </div>
-                          <div>
                             <label className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.labels.runningQty}</label>
                             <input 
                               type="number"
@@ -1612,6 +1758,19 @@ export default function App() {
                                   onChange={(e) => {
                                     const newList = [...data.consumptionCooling];
                                     newList[idx] = { ...newList[idx], totalGuard: parseFloat(e.target.value) || 0 };
+                                    setData({ ...data, consumptionCooling: newList });
+                                  }}
+                                  className="w-20 text-right text-xs font-bold text-indigo-600 border-b border-slate-100 focus:border-indigo-500 outline-none"
+                                />
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-[10px] text-slate-600">{data.coolingDepositGuardName}</span>
+                                <input 
+                                  type="number"
+                                  value={item.depositGuard}
+                                  onChange={(e) => {
+                                    const newList = [...data.consumptionCooling];
+                                    newList[idx] = { ...newList[idx], depositGuard: parseFloat(e.target.value) || 0 };
                                     setData({ ...data, consumptionCooling: newList });
                                   }}
                                   className="w-20 text-right text-xs font-bold text-indigo-600 border-b border-slate-100 focus:border-indigo-500 outline-none"
@@ -1662,6 +1821,7 @@ export default function App() {
                           operatingLoad: 80,
                           runningQuantity: 1,
                           totalGuard: 0,
+                          depositGuard: 0,
                           bioGuard41H01: 0,
                           bioGuard40H16: 0,
                           corroGuard33L01: 0
@@ -1707,19 +1867,6 @@ export default function App() {
                               onChange={(e) => {
                                 const newList = [...data.consumptionChiller];
                                 newList[idx] = { ...newList[idx], quantity: parseFloat(e.target.value) || 0 };
-                                setData({ ...data, consumptionChiller: newList });
-                              }}
-                              className="w-full text-xs border-b border-slate-100 focus:border-indigo-500 outline-none py-1"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{t.labels.load}</label>
-                            <input 
-                              type="number"
-                              value={item.operatingLoad}
-                              onChange={(e) => {
-                                const newList = [...data.consumptionChiller];
-                                newList[idx] = { ...newList[idx], operatingLoad: parseFloat(e.target.value) || 0 };
                                 setData({ ...data, consumptionChiller: newList });
                               }}
                               className="w-full text-xs border-b border-slate-100 focus:border-indigo-500 outline-none py-1"
@@ -2051,6 +2198,11 @@ export default function App() {
                 </div>
                 
                 {(() => {
+                  const showTotalGuard = data.consumptionCooling.some(item => (item.totalGuard || 0) > 0);
+                  const showDepositGuard = data.consumptionCooling.some(item => (item.depositGuard || 0) > 0);
+                  const showBioGuard41 = data.consumptionCooling.some(item => (item.bioGuard41H01 || 0) > 0);
+                  const showBioGuard40 = data.consumptionCooling.some(item => (item.bioGuard40H16 || 0) > 0);
+
                   return (
                     <>
                       <table className="w-full text-left border-collapse border border-slate-200 mb-2">
@@ -2058,11 +2210,11 @@ export default function App() {
                           <tr className="bg-indigo-900 text-white">
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest">{t.labels.system}</th>
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.quantity}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.load}</th>
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.runningQty}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingTotalGuardName}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingBioGuardName}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingBioGuard40Name}</th>
+                            {showTotalGuard && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingTotalGuardName}</th>}
+                            {showDepositGuard && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingDepositGuardName}</th>}
+                            {showBioGuard41 && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingBioGuardName}</th>}
+                            {showBioGuard40 && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.coolingBioGuard40Name}</th>}
                           </tr>
                         </thead>
                         <tbody className="text-[9px]">
@@ -2070,51 +2222,75 @@ export default function App() {
                             <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
                               <td className="p-1 font-bold text-indigo-900">{item.name}</td>
                               <td className="p-1 text-center">{formatNumber(item.quantity)}</td>
-                              <td className="p-1 text-center">{Number(item.operatingLoad) ? `${formatNumber(item.operatingLoad)}%` : "-"}</td>
                               <td className="p-1 text-center">{formatNumber(item.runningQuantity)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.totalGuard) * Number(item.runningQuantity), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard41H01) * Number(item.runningQuantity), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity), 1)}</td>
+                              {showTotalGuard && <td className="p-1 text-center font-semibold">{formatNumber(item.totalGuard, 1)}</td>}
+                              {showDepositGuard && <td className="p-1 text-center font-semibold">{formatNumber(item.depositGuard, 1)}</td>}
+                              {showBioGuard41 && <td className="p-1 text-center font-semibold">{formatNumber(item.bioGuard41H01, 1)}</td>}
+                              {showBioGuard40 && <td className="p-1 text-center font-semibold">{formatNumber(item.bioGuard40H16, 1)}</td>}
                             </tr>
                           ))}
                           <tr className="bg-indigo-50 font-black text-indigo-900">
                             <td className="p-1">{t.labels.total} ({t.labels.kgMonth})</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0))}</td>
-                            <td className="p-1 text-center">-</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.runningQuantity) || 0), 0))}</td>
-                            <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0), 1)}
-                            </td>
-                            <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0), 1)}
-                            </td>
-                            <td className="p-1 text-center">
-                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
-                            </td>
+                            {showTotalGuard && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
+                            {showDepositGuard && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.depositGuard) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
+                            {showBioGuard41 && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
+                            {showBioGuard40 && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
                           </tr>
                         </tbody>
                       </table>
 
                       {/* Yearly Consumption Summary */}
-                      <div className="grid grid-cols-3 gap-1.5 mb-2">
-                        <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
-                          <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingTotalGuardName)}</div>
-                          <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                      <div className="grid grid-cols-4 gap-1.5 mb-2">
+                        {showTotalGuard && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingTotalGuardName)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.totalGuard) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
                           </div>
-                        </div>
-                        <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
-                          <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuardName)}</div>
-                          <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                        )}
+                        {showDepositGuard && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingDepositGuardName)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.depositGuard) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
                           </div>
-                        </div>
-                        <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
-                          <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuard40Name)}</div>
-                          <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                        )}
+                        {showBioGuard41 && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuardName)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard41H01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
                           </div>
-                        </div>
+                        )}
+                        {showBioGuard40 && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.coolingBioGuard40Name)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionCooling.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Chemical Functions Information */}
@@ -2124,6 +2300,10 @@ export default function App() {
                           <div className="flex gap-1.5">
                             <span className="font-bold text-indigo-900 min-w-[100px]">{data.coolingTotalGuardName}:</span>
                             <span className="text-slate-600 italic">{data.descTotalGuard}</span>
+                          </div>
+                          <div className="flex gap-1.5">
+                            <span className="font-bold text-indigo-900 min-w-[100px]">{data.coolingDepositGuardName}:</span>
+                            <span className="text-slate-600 italic">{data.descDepositGuard}</span>
                           </div>
                           <div className="flex gap-1.5">
                             <span className="font-bold text-indigo-900 min-w-[100px]">{data.coolingBioGuardName}:</span>
@@ -2147,6 +2327,9 @@ export default function App() {
                 </div>
                 
                 {(() => {
+                  const showCorroGuard = data.consumptionChiller.some(item => (item.corroGuard33L01 || 0) > 0);
+                  const showBioGuard40 = data.consumptionChiller.some(item => (item.bioGuard40H16 || 0) > 0);
+
                   return (
                     <>
                       <table className="w-full text-left border-collapse border border-slate-200">
@@ -2154,10 +2337,9 @@ export default function App() {
                           <tr className="bg-indigo-900 text-white">
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest">{t.labels.system}</th>
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.quantity}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.load}</th>
                             <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{t.labels.runningQty}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.chillerCorroGuardName}</th>
-                            <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.chillerBioGuardName}</th>
+                            {showCorroGuard && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.chillerCorroGuardName}</th>}
+                            {showBioGuard40 && <th className="p-1 text-[8px] font-black uppercase tracking-widest text-center">{data.chillerBioGuardName}</th>}
                           </tr>
                         </thead>
                         <tbody className="text-[9px]">
@@ -2165,41 +2347,47 @@ export default function App() {
                             <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
                               <td className="p-1 font-bold text-indigo-900">{item.name}</td>
                               <td className="p-1 text-center">{formatNumber(item.quantity)}</td>
-                              <td className="p-1 text-center">{Number(item.operatingLoad) ? `${formatNumber(item.operatingLoad)}%` : "-"}</td>
                               <td className="p-1 text-center">{formatNumber(item.runningQuantity)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.corroGuard33L01) * Number(item.runningQuantity), 1)}</td>
-                              <td className="p-1 text-center font-semibold">{formatNumber(Number(item.bioGuard40H16) * Number(item.runningQuantity), 1)}</td>
+                              {showCorroGuard && <td className="p-1 text-center font-semibold">{formatNumber(item.corroGuard33L01, 1)}</td>}
+                              {showBioGuard40 && <td className="p-1 text-center font-semibold">{formatNumber(item.bioGuard40H16, 1)}</td>}
                             </tr>
                           ))}
                           <tr className="bg-indigo-50 font-black text-indigo-900">
                             <td className="p-1">{t.labels.total} ({t.labels.kgMonth})</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.quantity) || 0), 0))}</td>
-                            <td className="p-1 text-center">-</td>
                             <td className="p-1 text-center">{formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.runningQuantity) || 0), 0))}</td>
-                            <td className="p-1 text-center">
-                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0), 1)}
-                            </td>
-                            <td className="p-1 text-center">
-                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
-                            </td>
+                            {showCorroGuard && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
+                            {showBioGuard40 && (
+                              <td className="p-1 text-center">
+                                {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0), 1)}
+                              </td>
+                            )}
                           </tr>
                         </tbody>
                       </table>
 
                       {/* Chiller Yearly Consumption Summary */}
                       <div className="grid grid-cols-2 gap-1.5 mb-2 mt-1.5">
-                        <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
-                          <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerCorroGuardName)}</div>
-                          <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                        {showCorroGuard && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerCorroGuardName)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.corroGuard33L01) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
                           </div>
-                        </div>
-                        <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
-                          <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerBioGuardName)}</div>
-                          <div className="text-[11px] font-black text-indigo-900">
-                            {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                        )}
+                        {showBioGuard40 && (
+                          <div className="bg-slate-50 p-1.5 border border-slate-100 rounded">
+                            <div className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{t.labels.totalYearly.replace('{name}', data.chillerBioGuardName)}</div>
+                            <div className="text-[11px] font-black text-indigo-900">
+                              {formatNumber(data.consumptionChiller.reduce((acc, item) => acc + (Number(item.bioGuard40H16) * Number(item.runningQuantity) || 0), 0) * 12, 1)}
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
 
                       {/* Chiller Chemical Functions Information */}
@@ -2434,50 +2622,61 @@ export default function App() {
           {/* Section II: Standards & Chemicals */}
           <section className="mb-3 grid grid-cols-2 gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="h-5 w-1 bg-indigo-600"></div>
-                <h2 className="text-sm font-black tracking-tight text-indigo-900 uppercase">
-                  IIa. {data.systemType === 'CHILLER' ? t.report.waterAnalysisChiller : t.report.waterAnalysisCooling}
-                </h2>
-                {data.samplingDate && (
-                  <div className="text-[8px] text-slate-500 italic ml-auto">
-                    {t.labels.samplingDate}: {data.samplingDate}
-                  </div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <div className="h-5 w-1 bg-indigo-600"></div>
+                  <h2 className="text-sm font-black tracking-tight text-indigo-900 uppercase">
+                    IIa. {data.systemType === 'CHILLER' ? t.report.waterAnalysisChiller : t.report.waterAnalysisCooling}
+                  </h2>
+                </div>
+                {data.samplingNote && (
+                  <span className="text-[8px] font-bold text-slate-500 italic">{data.samplingNote}</span>
                 )}
+              </div>
+              <div className="grid grid-cols-[1fr_60px_70px_20px] gap-1 mb-1 px-1 border-b border-indigo-100 pb-1">
+                <div className="text-[7px] font-black uppercase text-slate-500">Parameter</div>
+                <div className="text-[7px] font-black uppercase text-indigo-900 text-center">{data.samplingTimeHeader}</div>
+                <div className="text-[7px] font-black uppercase text-slate-500 text-center">Standard</div>
+                <div></div>
               </div>
               <div className="grid grid-cols-1 gap-1">
                 {data.systemType === 'COOLING_TOWER' ? (
                   <>
-                    <TableRowCompact label={t.labels.phLevel} value={data.measuredPh} standard="7.0 - 8.7" status={data.measuredPh !== null && data.measuredPh >= 7.0 && data.measuredPh <= 8.7} />
-                    <TableRowCompact label={t.labels.turbidity} value={data.measuredTurbidityTower} standard="< 20" status={data.measuredTurbidityTower !== null && data.measuredTurbidityTower < 20} />
-                    <TableRowCompact label={t.labels.conductivity} value={data.measuredConductivity} unit="µS/cm" standard="< 2500" status={data.measuredConductivity !== null && data.measuredConductivity < 2500} />
-                    <TableRowCompact label={t.labels.hardness} value={data.measuredHardness} unit="ppm" standard="< 500" status={data.measuredHardness !== null && data.measuredHardness < 500} />
-                    <TableRowCompact label={t.labels.alkalinity} value={data.measuredMAlk} unit="ppm" standard="< 400" status={data.measuredMAlk !== null && data.measuredMAlk < 400} />
-                    <TableRowCompact label={t.labels.chlorides} value={data.measuredChlorides} unit="ppm" standard="< 300" status={data.measuredChlorides !== null && data.measuredChlorides < 300} />
-                    <TableRowCompact label={t.labels.freeChloride} value={data.measuredFreeChloride} unit="ppm" standard="0.1 - 0.3" status={data.measuredFreeChloride !== null && data.measuredFreeChloride >= 0.1 && data.measuredFreeChloride <= 0.3} />
-                    <TableRowCompact label={t.labels.cycle} value={data.makeupEc > 0 ? formatNumber(data.measuredConductivity / data.makeupEc, 1) : null} standard={data.cocLimit} status={true} />
-                    <TableRowCompact label={t.labels.silica} value={data.measuredSilica} unit="ppm" standard="< 150" status={data.measuredSilica !== null && data.measuredSilica < 150} />
-                    <TableRowCompact label={t.labels.iron} value={data.measuredIron} unit="ppm" standard="< 2.0" status={data.measuredIron !== null && data.measuredIron < 2.0} />
-                    <TableRowCompact label={t.labels.phosphate} value={data.measuredPhosphate} unit="ppm" standard="4.0 - 10.0" status={data.measuredPhosphate !== null && data.measuredPhosphate >= 4.0 && data.measuredPhosphate <= 10.0} />
-                    <TableRowCompact label={t.labels.msCorrTower} value={data.measuredMildSteelCorrosionTower} unit="mpy" standard="< 3.0" status={data.measuredMildSteelCorrosionTower !== null && data.measuredMildSteelCorrosionTower < 3.0} />
-                    <TableRowCompact label={t.labels.cuCorrTower} value={data.measuredCopperCorrosionTower} unit="mpy" standard="< 1.0" status={data.measuredCopperCorrosionTower !== null && data.measuredCopperCorrosionTower < 1.0} />
-                    <TableRowCompact label={t.labels.lsiIndex} value={metrics.calculatedLsi !== null ? formatNumber(metrics.calculatedLsi, 2) : "-"} standard="0.5 - 2.0" status={metrics.calculatedLsi !== null && metrics.calculatedLsi >= 0.5 && metrics.calculatedLsi <= 2.0} />
+                    <TableRowCompact label={t.labels.phLevel} value={data.measuredPh} standard={data.towerStandards.ph} />
+                    <TableRowCompact label={t.labels.turbidity} value={data.measuredTurbidityTower} standard={data.towerStandards.turbidity} />
+                    <TableRowCompact label={t.labels.conductivity} value={data.measuredConductivity} unit="µS/cm" standard={data.towerStandards.conductivity} />
+                    <TableRowCompact label={t.labels.hardness} value={data.measuredHardness} unit="ppm" standard={data.towerStandards.hardness} />
+                    <TableRowCompact label={t.labels.alkalinity} value={data.measuredMAlk} unit="ppm" standard={data.towerStandards.alkalinity} />
+                    <TableRowCompact label={t.labels.iron} value={data.measuredIron} unit="ppm" standard={data.towerStandards.iron} />
+                    <TableRowCompact label={t.labels.silica} value={data.measuredSilica} unit="ppm" standard={data.towerStandards.silica} />
+                    <TableRowCompact label={t.labels.chlorides} value={data.measuredChlorides} unit="ppm" standard={data.towerStandards.chlorides} />
+                    <TableRowCompact label={t.labels.freeChloride} value={data.measuredFreeChloride} unit="ppm" standard={data.towerStandards.freeChloride} />
+                    <TableRowCompact label="Bacteria" value={data.measuredBacteriaTower} standard={data.towerStandards.bacteria} />
+                    <TableRowCompact label={t.labels.cycle} value={data.makeupEc > 0 ? formatNumber(data.measuredConductivity / data.makeupEc, 1) : null} standard={data.towerStandards.cycle} />
+                    <TableRowCompact label={t.labels.phosphate} value={data.measuredPhosphate} unit="ppm" standard={data.towerStandards.phosphate} />
+                    <TableRowCompact label={t.labels.lsiIndex} value={metrics.calculatedLsi !== null ? formatNumber(metrics.calculatedLsi, 2) : "-"} standard={data.towerStandards.lsi} />
+                    <TableRowCompact label={t.labels.msCorrTower} value={data.measuredMildSteelCorrosionTower} unit="mpy" standard={data.towerStandards.msCorr} />
+                    <TableRowCompact label={t.labels.cuCorrTower} value={data.measuredCopperCorrosionTower} unit="mpy" standard={data.towerStandards.cuCorr} />
+                    <TableRowCompact label="COD" value={data.measuredCodTower} unit="ppm" standard={data.towerStandards.cod} />
                   </>
                 ) : (
                   <>
-                    <TableRowCompact label={t.labels.phLevel} value={data.measuredPh} standard="8.5 - 10.5" status={data.measuredPh !== null && data.measuredPh >= 8.5 && data.measuredPh <= 10.5} />
-                    <TableRowCompact label={t.labels.conductivity} value={data.measuredConductivity} unit="µS/cm" standard="< 10,000" status={data.measuredConductivity !== null && data.measuredConductivity < 10000} />
-                    <TableRowCompact label={t.labels.alkalinity} value={data.measuredMAlk} unit="ppm" standard="100 - 300" status={data.measuredMAlk !== null && data.measuredMAlk >= 100 && data.measuredMAlk <= 300} />
-                    <TableRowCompact label={t.labels.chlorides} value={data.measuredChlorides} unit="ppm" standard="< 80" status={data.measuredChlorides !== null && data.measuredChlorides < 80} />
-                    <TableRowCompact label={t.labels.iron} value={data.measuredIron} unit="ppm" standard="< 2.0" status={data.measuredIron !== null && data.measuredIron < 2.0} />
-                    <TableRowCompact label={t.labels.copper} value={data.measuredCopper} unit="ppm" standard="< 0.2" status={data.measuredCopper !== null && data.measuredCopper < 0.2} />
-                    <TableRowCompact label={t.labels.bacteria} value={data.measuredBacteria} standard="< 10^4" status={true} />
-                    <TableRowCompact label={t.labels.nitrite} value={data.measuredNitrite} unit="ppm" standard="700 - 1500" status={data.measuredNitrite !== null && data.measuredNitrite >= 700 && data.measuredNitrite <= 1500} />
-                    <TableRowCompact label={t.labels.sulfate} value={data.measuredSulfate} unit="ppm" standard="< 20" status={data.measuredSulfate !== null && data.measuredSulfate < 20} />
-                    <TableRowCompact label={t.labels.cuCorr} value={data.measuredCopperCorrosion} unit="mpy" standard="0.25 max" status={data.measuredCopperCorrosion !== null && data.measuredCopperCorrosion <= 0.25} />
-                    <TableRowCompact label={t.labels.msCorr} value={data.measuredMildSteelCorrosion} unit="mpy" standard="0.5 max" status={data.measuredMildSteelCorrosion !== null && data.measuredMildSteelCorrosion <= 0.5} />
+                    <TableRowCompact label={t.labels.phLevel} value={data.measuredPh} standard={data.chillerStandards.ph} />
+                    <TableRowCompact label={t.labels.conductivity} value={data.measuredConductivity} unit="µS/cm" standard={data.chillerStandards.conductivity} />
+                    <TableRowCompact label={t.labels.alkalinity} value={data.measuredMAlk} unit="ppm" standard={data.chillerStandards.alkalinity} />
+                    <TableRowCompact label={t.labels.chlorides} value={data.measuredChlorides} unit="ppm" standard={data.chillerStandards.chlorides} />
+                    <TableRowCompact label={t.labels.iron} value={data.measuredIron} unit="ppm" standard={data.chillerStandards.iron} />
+                    <TableRowCompact label={t.labels.copper} value={data.measuredCopper} unit="ppm" standard={data.chillerStandards.copper} />
+                    <TableRowCompact label={t.labels.bacteria} value={data.measuredBacteria} standard={data.chillerStandards.bacteria} />
+                    <TableRowCompact label={t.labels.nitrite} value={data.measuredNitrite} unit="ppm" standard={data.chillerStandards.nitrite} />
+                    <TableRowCompact label={t.labels.sulfate} value={data.measuredSulfate} unit="ppm" standard={data.chillerStandards.sulfate} />
+                    <TableRowCompact label={t.labels.cuCorr} value={data.measuredCopperCorrosion} unit="mpy" standard={data.chillerStandards.cuCorr} />
+                    <TableRowCompact label={t.labels.msCorr} value={data.measuredMildSteelCorrosion} unit="mpy" standard={data.chillerStandards.msCorr} />
                   </>
                 )}
+              </div>
+              <div className="mt-2 text-[7px] text-slate-500 italic font-medium">
+                {t.report.waterStandardNote}
               </div>
             </div>
             <div>
@@ -2488,12 +2687,12 @@ export default function App() {
               <table className="w-full text-left border-collapse border border-slate-200">
                 <thead>
                   <tr className="bg-indigo-900 text-white">
-                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest">{t.report.chemical}</th>
-                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center">{t.labels.dosage}</th>
-                    {data.systemType === 'CHILLER' && <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center">{t.report.kgInitial}</th>}
-                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center">{t.report.kgDay}</th>
-                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center">{t.report.kgMonth}</th>
-                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center">{t.report.kgYear}</th>
+                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest" style={{ width: '35%' }}>{t.report.chemical}</th>
+                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '13%' }}>{t.labels.dosage}</th>
+                    {data.systemType === 'CHILLER' && <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '13%' }}>{t.report.kgInitial}</th>}
+                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '13%' }}>{t.report.kgDay}</th>
+                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '13%' }}>{t.report.kgMonth}</th>
+                    <th className="p-1.5 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '13%' }}>{t.report.kgYear}</th>
                   </tr>
                 </thead>
                 <tbody className="text-[10px]">
@@ -2629,16 +2828,55 @@ const formatDisplayValue = (value: any) => {
   return value;
 };
 
-function TableRowCompact({ label, value, unit = "", standard, status }: any) {
+const parseStandardAndCheck = (value: any, standard: string): boolean => {
+  if (value === null || value === undefined || value === "" || value === "-") return true;
+  if (!standard) return true;
+
+  const numValue = typeof value === 'string' ? parseFloat(value.replace(/[^0-9.-]/g, '')) : value;
+  if (isNaN(numValue)) return true;
+
+  const cleanStd = standard.toLowerCase().trim();
+
+  // Handle range: "min - max" or "(min - max)"
+  const rangeMatch = cleanStd.match(/([0-9.]+)\s*-\s*([0-9.]+)/);
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1]);
+    const max = parseFloat(rangeMatch[2]);
+    return numValue >= min && numValue <= max;
+  }
+
+  // Handle less than: "< max" or "max max"
+  if (cleanStd.includes('<') || cleanStd.includes('max')) {
+    const maxMatch = cleanStd.match(/([0-9.]+)/);
+    if (maxMatch) {
+      const max = parseFloat(maxMatch[1]);
+      return numValue <= max;
+    }
+  }
+
+  // Handle greater than: "> min"
+  if (cleanStd.includes('>')) {
+    const minMatch = cleanStd.match(/([0-9.]+)/);
+    if (minMatch) {
+      const min = parseFloat(minMatch[1]);
+      return numValue >= min;
+    }
+  }
+
+  return true;
+};
+
+function TableRowCompact({ label, value, unit = "", standard }: any) {
   const displayValue = formatDisplayValue(value);
   const hasValue = displayValue !== "-";
+  const status = parseStandardAndCheck(value, standard);
 
   return (
-    <div className={`flex justify-between items-center p-1 border-l-2 print-bg-white ${!hasValue ? 'border-slate-200 bg-slate-50/50' : status ? 'border-indigo-600 bg-slate-50' : 'border-amber-500 bg-amber-50'}`}>
-      <span className="text-[9px] font-bold uppercase tracking-tight leading-none">{label}</span>
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] font-black leading-none">{displayValue}{hasValue && unit ? ` ${unit}` : ""}</span>
-        <span className="text-[8px] text-slate-700 italic leading-none">({standard})</span>
+    <div className={`grid grid-cols-[1fr_60px_70px_20px] items-center p-1 border-l-2 print-bg-white ${!hasValue ? 'border-slate-200 bg-slate-50/50' : status ? 'border-indigo-600 bg-slate-50' : 'border-amber-500 bg-amber-50'}`}>
+      <span className="text-[9px] font-bold uppercase tracking-tight leading-none truncate pr-1">{label}</span>
+      <span className="text-[10px] font-black leading-none text-center">{displayValue}{hasValue && unit ? ` ${unit}` : ""}</span>
+      <span className="text-[8px] text-slate-700 italic leading-none text-center">({standard})</span>
+      <div className="flex justify-center">
         {!hasValue ? null : status ? (
           <CheckCircle2 className="w-2.5 h-2.5 text-indigo-600" />
         ) : (
@@ -2652,8 +2890,10 @@ function TableRowCompact({ label, value, unit = "", standard, status }: any) {
 function RecommendationCard({ title, desc, icon }: any) {
   return (
     <div className="bg-slate-50 print-bg-white p-2.5 border-t-2 border-indigo-900">
-      <div className="text-indigo-900 mb-1">{icon}</div>
-      <h4 className="text-[9px] font-black uppercase mb-1 tracking-wider leading-tight">{title}</h4>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <div className="text-indigo-900">{icon}</div>
+        <h4 className="text-[9px] font-black uppercase tracking-wider leading-tight">{title}</h4>
+      </div>
       <p className="text-[9px] leading-snug text-slate-800">{desc}</p>
     </div>
   );
@@ -2663,7 +2903,7 @@ function DataRow({ label, value, large }: any) {
   const displayValue = formatDisplayValue(value);
   
   return (
-    <div className={`flex justify-between items-end border-b border-slate-100 ${large ? 'py-1' : 'pb-0'}`}>
+    <div className={`flex justify-between items-end border-b border-slate-100 ${large ? 'py-1.5' : 'pb-1'}`}>
       <span className={`${large ? 'text-[12px]' : 'text-[9px]'} text-slate-800 font-medium leading-tight`}>{label}</span>
       <span className={`${large ? 'text-[13px]' : 'text-[10px]'} font-black text-indigo-900 leading-tight`}>{displayValue}</span>
     </div>
