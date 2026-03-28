@@ -1527,7 +1527,7 @@ export default function App() {
                                 <option value="Culligan Total Guard 20C23">Culligan Total Guard 20C23</option>
                                 <option value="Culligan Total Guard 20C04">Culligan Total Guard 20C04</option>
                               </>
-                            ) : i === 1 ? (
+                            ) : (
                               <>
                                 <option value="Culligan Deposit Guard 22C55">Culligan Deposit Guard 22C55</option>
                               </>
