@@ -215,8 +215,8 @@ const TRANSLATIONS = {
       nonOxidizing: 'Diệt vi sinh không oxy hóa',
     },
     defaults: {
-      chillerNotes: "Cách châm hóa chất:\n+ Culligan Corro Guard 33L01: châm định kì hằng tháng bằng thiết bị theo chỉ dẫn\n+ Culligan Bio Guard 40H16: châm định kì hằng tuần/tháng bằng thiết bị theo chỉ dẫn\n*kg/lần: chỉ áp dụng cho những hệ thống mới\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
-      towerNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
+      chillerNotes: "Cách châm hóa chất:\n+ Culligan Corro Guard 33L01: châm định kì hằng tháng bằng thiết bị theo chỉ dẫn\n+ Culligan Bio Guard 40H16: châm định kì hằng tuần/tháng bằng thiết bị theo chỉ dẫn\n*kg/lần: chỉ áp dụng cho những hệ thống mới \nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
+      towerNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
       chillerRecs: [
         { title: "Kiểm soát rò rỉ", desc: "Theo dõi và khắc phục các điểm rò rỉ để duy trì nồng độ hóa chất ổn định." },
         { title: "Kiểm tra định kỳ", desc: "Phân tích mẫu nước hàng tuần để điều chỉnh liều lượng hóa chất phù hợp." },
@@ -224,12 +224,12 @@ const TRANSLATIONS = {
         { title: "Bảo trì chiller", desc: "Theo dõi hiệu suất trao đổi nhiệt và thực hiện tẩy rửa nếu cần thiết." }
       ],
       towerRecs: [
-        { title: "Vệ sinh tháp", desc: "Súc xả đáy tháp để loại bỏ bùn lắng và cặn hữu cơ mỗi 3 tháng." },
-        { title: "Kiểm soát Blowdown", desc: "Điều chỉnh van xả đáy tự động dựa trên độ dẫn điện duy trì COC 4.5 - 5.0." },
-        { title: "Liều lượng diệt vi sinh", desc: "Tăng liều sốc diệt khuẩn trong mùa mưa hoặc khi nhiệt độ nước cao." },
-        { title: "Bảo trì thiết bị", desc: "Hiệu chuẩn cảm biến pH và Conductivity hàng tháng đảm bảo chính xác." }
+        { title: "Vệ sinh tháp", desc: "Súc xả đáy tháp để loại bỏ bùn lắng và cặn hữu cơ mỗi 3 tháng và thay nước mới." },
+        { title: "Kiểm soát Blowdown", desc: "Đảm bảo duy trì việc xả đáy (van xả đáy tự động/ mở van tay) dựa trên độ dẫn điện duy trì COC 4.5 - 5.0, để loại bỏ bớt tạm chất trong tháp" },
+        { title: "Liều lượng diệt vi sinh", desc: "Tăng liều sốc diệt khuẩn vi sinh rong rêu trong mùa mưa hoặc khi nhiệt độ nước cao." },
+        { title: "Bảo trì thiết bị", desc: "Hiệu chuẩn cảm biến pH và Conductivity hàng tháng đảm bảo chính xác. Kiểm tra hệ thống châm đảm bảo hoạt động ổn định." }
       ],
-      summaryTitle: 'Chỉ số hiệu quả hệ thống',
+      summaryTitle: 'hệ thống',
     }
   },
   EN: {
@@ -415,8 +415,8 @@ const TRANSLATIONS = {
       nonOxidizing: 'Non-Oxidizing Biocide',
     },
     defaults: {
-      chillerNotes: "Chemical Dosing Method:\n+ Culligan Corro Guard 33L01: Dose monthly using equipment as instructed\n+ Culligan Bio Guard 40H16: Dose weekly/monthly using equipment as instructed\n*kg/initial: Only applies to new systems\n\nChemicals calculated for 24h/day, 30 days/month operation.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
-      towerNotes: "Chemical Dosing Method:\n+ Culligan Total Guard 20C04: Continuous dosing, dosing system\n+ Culligan Bio Guard 41H01: Continuous dosing by system or manual as instructed.\n+ Culligan Bio Guard 40H16: Manual dosing as instructed.\n+ Other chemicals (if any): Continuous dosing by system or manual as instructed.\n\nChemicals calculated for 24h/day, 30 days/month operation.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
+      chillerNotes: "Chemical Dosing Method:\n+ Culligan Corro Guard 33L01: Dose monthly using equipment as instructed\n+ Culligan Bio Guard 40H16: Dose weekly/monthly using equipment as instructed\n*kg/initial: Only applies to new systems\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
+      towerNotes: "Chemical Dosing Method:\n+ Culligan Total Guard 20C04: Continuous dosing, dosing system\n+ Culligan Bio Guard 41H01: Continuous dosing by system or manual as instructed.\n+ Culligan Bio Guard 40H16: Manual dosing as instructed.\n+ Other chemicals (if any): Continuous dosing by system or manual as instructed.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
       chillerRecs: [
         { title: "Leakage Control", desc: "Monitor and fix leak points to maintain stable chemical concentration." },
         { title: "Periodic Testing", desc: "Analyze water samples weekly to adjust chemical dosage appropriately." },
@@ -424,12 +424,12 @@ const TRANSLATIONS = {
         { title: "Chiller Maintenance", desc: "Monitor heat exchange performance and perform cleaning if necessary." }
       ],
       towerRecs: [
-        { title: "Tower Cleaning", desc: "Flush tower basin to remove sludge and organic deposits every 3 months." },
-        { title: "Blowdown Control", desc: "Adjust automatic blowdown valve based on conductivity to maintain COC 4.5 - 5.0." },
-        { title: "Biocide Dosage", desc: "Increase biocide shock dose during rainy season or high water temperature." },
-        { title: "Equipment Maintenance", desc: "Calibrate pH and Conductivity sensors monthly to ensure accuracy." }
+        { title: "Tower Cleaning", desc: "Flush the cooling tower basin every three months to remove sediment and organic debris, then perform a full water replacement" },
+        { title: "Blowdown Control", desc: "Maintain continuous blowdown (via automatic or manual valves) to keep the Cycles of Concentration (COC) between 4.5 and 5.0, ensuring effective removal of impurities." },
+        { title: "Biocide Dosage", desc: "Increase disinfectant shock dosing during the rainy season or periods of high water temperature to prevent biological growth." },
+        { title: "Equipment Maintenance", desc: "Perform monthly calibration of pH and conductivity sensors to maintain accuracy. Regularly inspect the dosing system for stable operation" }
       ],
-      summaryTitle: 'System Efficiency Index',
+      summaryTitle: 'System',
     }
   }
 };
@@ -580,9 +580,9 @@ interface ReportData {
 const INITIAL_DATA: ReportData = {
   systemType: 'CHILLER',
   customerName: "VINAMILK FACTORY",
-  projectName: "VN-CHILL-NORTH",
+  projectName: "VN-CHEMIZOL",
   reportId: "CH-2024-089",
-  engineerName: "ENG. MINH TRAN",
+  engineerName: "ENG. NGHIA",
   date: new Date().toLocaleDateString('en-GB'),
   pageNumber: "1/1",
   
