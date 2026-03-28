@@ -128,7 +128,7 @@ const TRANSLATIONS = {
       descTotalGuard: 'Hóa chất ức chế ăn mòn và cáu cặn đa năng cho hệ thống giải nhiệt hở.',
       descDepositGuard: 'Hóa chất ức chế cáu cặn và phân tán bùn sét, ngăn ngừa lắng đọng.',
       descBioGuard41: 'Hóa chất diệt khuẩn dạng oxy hóa mạnh, kiểm soát rong rêu và vi sinh vật.',
-      descBioGuard40: 'Culligan Bio Guard 40H16: Hóa chất diệt khuẩn dạng không oxy hóa, hiệu quả cao trong việc kiểm soát màng sinh học.',
+      descBioGuard40: 'Hóa chất diệt khuẩn dạng không oxy hóa, hiệu quả cao trong việc kiểm soát màng sinh học.',
       descCorroGuard: 'Hóa chất ức chế ăn mòn và cáu cặn chuyên dụng cho hệ thống nước lạnh kín (Chilled water).',
       descBioGuard40Chiller: 'Culligan Bio Guard 40H16: Hóa chất diệt khuẩn không oxy hóa, kiểm soát vi sinh vật và màng sinh học trong hệ thống kín.',
     },
@@ -774,7 +774,7 @@ const calculateMetrics = (data: ReportData) => {
     // B = -13.12 * log10(Temp + 273) + 34.55
     const B = -13.12 * Math.log10(data.tempOut + 273) + 34.55;
     // C = log10(Calcium Hardness) - 0.4
-    const C = Math.log10(Math.max(1, data.measuredHardness)) - 0.4;
+    const C = Math.log10(Math.max(1, data.measuredHardness*0.8)) - 0.4;
     // D = log10(M-Alkalinity)
     const D = Math.log10(Math.max(1, data.measuredMAlk));
     const phs = (9.3 + A + B) - (C + D);
@@ -804,7 +804,7 @@ const calculateMetrics = (data: ReportData) => {
       // COOLING TOWER
       if (chem.name === data.coolingTotalGuardName || 
           chem.name === "Culligan Total Guard 20C23" || 
-          chem.name === "Culligan Total Guard 20C24") {
+          chem.name === "Culligan Total Guard 20C04") {
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
@@ -813,7 +813,6 @@ const calculateMetrics = (data: ReportData) => {
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
-      } else if (chem.name === data.coolingBioGuardName || chem.name.toUpperCase().includes("NAOCL")) {
         if (chem.name.toUpperCase().includes("NAOCL")) {
           kgDay = ((chem.dosage/10) * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * data.operatingHours) / 1000;
           kgMonth = kgDay * data.operatingDaysPerMonth;
