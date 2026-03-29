@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Info,
   ChevronRight,
+  ChevronLeft,
   Calculator,
   Download,
   ExternalLink,
@@ -19,17 +20,56 @@ import {
   RotateCcw,
   Plus,
   Edit,
-  Loader2
+  Loader2,
+  Menu,
+  X,
+  Globe,
+  Settings,
+  LogIn,
+  LogOut,
+  User as UserIcon,
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import html2pdf from 'html2pdf.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
+// --- Firebase ---
+import { 
+  auth, 
+  db, 
+  googleProvider, 
+  syncUserProfile, 
+  handleFirestoreError, 
+  OperationType,
+  UserProfile
+} from './firebase';
+import { 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  User as FirebaseUser 
+} from 'firebase/auth';
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot,
+  serverTimestamp,
+  addDoc
+} from 'firebase/firestore';
+
 // --- Types ---
 type SystemType = 'CHILLER' | 'COOLING_TOWER';
 type Language = 'VI' | 'EN';
-type ActiveTab = 'intro' | 'editor' | 'consumption' | 'history';
+type ActiveTab = 'intro' | 'editor' | 'consumption' | 'history' | 'settings' | 'admin';
 
 const TRANSLATIONS = {
   VI: {
@@ -910,6 +950,11 @@ const TextAreaField = ({ label, value, onChange }: any) => (
 import { translateReportData } from './services/translationService';
 
 export default function App() {
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [exportLogs, setExportLogs] = useState<any[]>([]);
+
   const [data, setData] = useState<ReportData>(() => {
     const saved = localStorage.getItem('culligan_current_data');
     if (saved) {
@@ -1002,6 +1047,85 @@ export default function App() {
   });
 
   React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setIsAuthLoading(true);
+      if (firebaseUser) {
+        setUser(firebaseUser);
+        try {
+          const profile = await syncUserProfile(firebaseUser);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error("Error syncing user profile:", error);
+        }
+      } else {
+        setUser(null);
+        setUserProfile(null);
+      }
+      setIsAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    if (userProfile?.role === 'admin') {
+      const q = query(collection(db, 'exportLogs'), orderBy('timestamp', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setExportLogs(logs);
+      }, (error) => {
+        handleFirestoreError(error, OperationType.LIST, 'exportLogs');
+      });
+      return () => unsubscribe();
+    }
+  }, [userProfile]);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setActiveTab('intro');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
+
+  const logExport = async () => {
+    if (!user || !data) return;
+    
+    try {
+      const chemicalUsage: any = {};
+      if (data.systemType === 'COOLING_TOWER') {
+        data.towerChemicals.forEach(chem => {
+          if (chem.name) chemicalUsage[chem.name] = chem.dosage;
+        });
+      } else {
+        data.chillerChemicals.forEach(chem => {
+          if (chem.name) chemicalUsage[chem.name] = chem.dosage;
+        });
+      }
+
+      await addDoc(collection(db, 'exportLogs'), {
+        id: crypto.randomUUID(),
+        proposalId: data.reportId,
+        customerName: data.customerName,
+        authorUid: user.uid,
+        authorEmail: user.email,
+        timestamp: serverTimestamp(),
+        chemicalUsage
+      });
+    } catch (error) {
+      console.error("Failed to log export:", error);
+    }
+  };
+
+  React.useEffect(() => {
     localStorage.setItem('culligan_proposals', JSON.stringify(savedProposals));
   }, [savedProposals]);
 
@@ -1020,18 +1144,35 @@ export default function App() {
     }
   };
 
-  const handleSaveProposal = () => {
-    const newProposal = { ...data, date: new Date().toLocaleString('en-GB') };
-    const exists = savedProposals.findIndex(p => p.reportId === data.reportId);
-    
-    if (exists !== -1) {
-      const updated = [...savedProposals];
-      updated[exists] = newProposal;
-      setSavedProposals(updated);
-    } else {
-      setSavedProposals([newProposal, ...savedProposals]);
+  const handleSaveProposal = async () => {
+    if (!user) {
+      alert("Please login to save proposals.");
+      return;
     }
-    alert(t.sidebar.saveSuccess);
+
+    const newProposal = { 
+      ...data, 
+      date: new Date().toLocaleString('en-GB'),
+      authorUid: user.uid,
+      authorEmail: user.email,
+      createdAt: serverTimestamp()
+    };
+    
+    try {
+      await setDoc(doc(db, 'proposals', data.reportId), newProposal);
+      
+      const exists = savedProposals.findIndex(p => p.reportId === data.reportId);
+      if (exists !== -1) {
+        const updated = [...savedProposals];
+        updated[exists] = newProposal;
+        setSavedProposals(updated);
+      } else {
+        setSavedProposals([newProposal, ...savedProposals]);
+      }
+      alert(t.sidebar.saveSuccess);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `proposals/${data.reportId}`);
+    }
   };
 
   const deleteProposal = (id: string) => {
@@ -1159,8 +1300,9 @@ export default function App() {
     window.open(window.location.href, '_blank');
   };
 
-  const handleSystemPrint = () => {
+  const handleSystemPrint = async () => {
     window.print();
+    await logExport();
   };
 
   const updateChemical = (index: number, field: keyof ChemicalRow, value: any) => {
@@ -1221,102 +1363,164 @@ export default function App() {
     setData({ ...data, [fieldName]: newRecs });
   };
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 text-indigo-600 animate-spin" />
+          <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Loading Session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-indigo-100/50 p-8 border border-slate-100 text-center"
+        >
+          <div className="w-20 h-20 bg-indigo-600 flex items-center justify-center rounded-3xl shadow-xl shadow-indigo-200 mx-auto mb-8">
+            <Calculator className="text-white w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Culligan Technical</h1>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">Professional Report Generator</p>
+          
+          <div className="space-y-4">
+            <button 
+              onClick={handleLogin}
+              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-indigo-100"
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
+              Sign in with Google
+            </button>
+            <p className="text-[10px] text-slate-400 font-medium px-4">
+              Authorized access only. By signing in, you agree to our terms of service and data privacy policy.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100 flex font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-900 overflow-hidden">
+      {/* Mobile Header */}
+      <header className="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-50 no-print">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-indigo-600 flex items-center justify-center rounded-lg shadow-md shadow-indigo-100">
+            <Calculator className="text-white w-5 h-5" />
+          </div>
+          <span className="font-black text-sm tracking-tight">Chemizol Report</span>
+        </div>
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
+        >
+          {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </header>
+
       {/* --- Sidebar / Editor --- */}
       <AnimatePresence mode="wait">
         {isSidebarOpen && (
           <motion.aside 
-            initial={{ x: -320 }}
-            animate={{ x: 0 }}
-            exit={{ x: -320 }}
-            className="w-80 bg-white border-r border-slate-200 flex flex-col h-screen sticky top-0 z-20 no-print shadow-xl"
+            initial={{ x: -320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -320, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="fixed md:sticky top-0 left-0 w-full md:w-85 bg-white border-r border-slate-200 flex flex-col h-[calc(100vh-64px)] md:h-screen z-40 no-print shadow-2xl md:shadow-none overflow-hidden"
           >
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-600 flex items-center justify-center rounded-lg">
-                  <Calculator className="text-white w-5 h-5" />
+            <div className="hidden md:flex p-6 border-b border-slate-100 items-center justify-between bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-600 flex items-center justify-center rounded-xl shadow-lg shadow-indigo-200">
+                  <Calculator className="text-white w-6 h-6" />
                 </div>
-                <h1 className="font-black text-lg tracking-tight">{t.sidebar.title}</h1>
+                <div>
+                  <h1 className="font-black text-base tracking-tight leading-none">{t.sidebar.title}</h1>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Professional Edition</p>
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <button 
-                  onClick={handleLanguageToggle}
-                  disabled={isTranslating}
-                  className={`px-2 py-1 text-[10px] font-black border border-slate-200 rounded hover:bg-slate-50 transition-colors mr-2 flex items-center gap-1 ${isTranslating ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isTranslating ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    language === 'VI' ? 'EN' : 'VI'
-                  )}
-                </button>
-                <button 
-                  onClick={handleSaveProposal}
-                  className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-full transition-colors"
-                  title={t.sidebar.saveProposal}
-                >
-                  <Save className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={handleReset}
-                  className="p-2 hover:bg-amber-50 text-amber-600 rounded-full transition-colors"
-                  title={t.sidebar.reset}
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-                <button 
                   onClick={() => setIsSidebarOpen(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
                 >
-                  <ChevronRight className="w-4 h-4 rotate-180" />
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
             {/* Tabs */}
-            <div className="p-2 bg-slate-50 border-b border-slate-100">
-              <div className="grid grid-cols-5 gap-1 bg-slate-200/50 p-1 rounded-lg">
-                <button 
-                  onClick={() => setActiveTab('intro')}
-                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-md transition-all ${activeTab === 'intro' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}`}
-                >
-                  <Info className="w-3.5 h-3.5 mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">
-                    {t.sidebar.intro}
-                  </span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('editor')}
-                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-md transition-all ${activeTab === 'editor' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}`}
-                >
-                  <Edit className="w-3.5 h-3.5 mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">
-                    {t.sidebar.editor}
-                  </span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('consumption')}
-                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-md transition-all ${activeTab === 'consumption' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}`}
-                >
-                  <Zap className="w-3.5 h-3.5 mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">
-                    {t.sidebar.consumption}
-                  </span>
-                </button>
-                <button 
-                  onClick={() => setActiveTab('history')}
-                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-md transition-all ${activeTab === 'history' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'}`}
-                >
-                  <History className="w-3.5 h-3.5 mb-1" />
-                  <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">
-                    {t.sidebar.history}
-                  </span>
-                </button>
+            <div className="bg-slate-100/80 p-1 rounded-xl">
+              <div className={`grid ${userProfile?.role === 'admin' ? 'grid-cols-6' : 'grid-cols-5'} gap-1`}>
+                <TabButton active={activeTab === 'intro'} onClick={() => setActiveTab('intro')} icon={<Info className="w-4 h-4" />} label={t.sidebar.intro} />
+                <TabButton active={activeTab === 'editor'} onClick={() => setActiveTab('editor')} icon={<Edit className="w-4 h-4" />} label={t.sidebar.editor} />
+                <TabButton active={activeTab === 'consumption'} onClick={() => setActiveTab('consumption')} icon={<Zap className="w-4 h-4" />} label={t.sidebar.consumption} />
+                <TabButton active={activeTab === 'history'} onClick={() => setActiveTab('history')} icon={<History className="w-4 h-4" />} label={t.sidebar.history} />
+                <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} icon={<Settings className="w-4 h-4" />} label="STG" />
+                {userProfile?.role === 'admin' && (
+                  <TabButton active={activeTab === 'admin'} onClick={() => setActiveTab('admin')} icon={<ShieldCheck className="w-4 h-4" />} label="ADM" />
+                )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-6">
+              {/* User Profile */}
+              {user && (
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {user.photoURL ? (
+                      <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-white shadow-sm" referrerPolicy="no-referrer" />
+                    ) : (
+                      <div className="w-8 h-8 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded-full">
+                        <UserIcon className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className="overflow-hidden">
+                      <p className="text-[10px] font-black text-slate-800 truncate">{user.displayName || user.email}</p>
+                      <p className="text-[8px] font-bold text-indigo-600 uppercase tracking-widest">{userProfile?.role || 'User'}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="p-2 hover:bg-red-50 text-red-500 rounded-lg transition-all active:scale-95"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              {/* Quick Actions in Sidebar */}
+              <div className="flex items-center justify-between px-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Actions</span>
+                <div className="flex items-center gap-1">
+                  <button 
+                    onClick={handleLanguageToggle}
+                    disabled={isTranslating}
+                    className={`px-2 py-1 text-[10px] font-black border border-slate-200 rounded-lg hover:bg-slate-50 transition-all active:scale-95 flex items-center gap-1.5 ${isTranslating ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isTranslating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Globe className="w-3 h-3" />}
+                    {language === 'VI' ? 'EN' : 'VI'}
+                  </button>
+                  <button 
+                    onClick={handleSaveProposal}
+                    className="p-2 hover:bg-emerald-50 text-emerald-600 rounded-lg transition-all active:scale-95 border border-transparent hover:border-emerald-100"
+                    title={t.sidebar.saveProposal}
+                  >
+                    <Save className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={handleReset}
+                    className="p-2 hover:bg-amber-50 text-amber-600 rounded-lg transition-all active:scale-95 border border-transparent hover:border-amber-100"
+                    title={t.sidebar.reset}
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
               {activeTab === 'intro' ? (
                 <section className="space-y-4">
                   <div className="flex items-center gap-2 text-indigo-600">
@@ -1940,7 +2144,7 @@ export default function App() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : activeTab === 'history' ? (
             <div className="space-y-4">
                 <div className="flex items-center gap-2 text-indigo-600 mb-4">
                   <History className="w-4 h-4" />
@@ -1990,7 +2194,139 @@ export default function App() {
                   </div>
                 )}
               </div>
-            )}
+            ) : activeTab === 'settings' ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600 mb-4">
+                  <Settings className="w-4 h-4" />
+                  <h2 className="text-xs font-black uppercase tracking-widest">Settings</h2>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Language / Ngôn ngữ</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button 
+                        onClick={() => setLanguage('VI')}
+                        className={`py-3 rounded-lg font-black text-xs transition-all ${language === 'VI' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        TIẾNG VIỆT
+                      </button>
+                      <button 
+                        onClick={() => setLanguage('EN')}
+                        className={`py-3 rounded-lg font-black text-xs transition-all ${language === 'EN' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}
+                      >
+                        ENGLISH
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-200 space-y-3">
+                    <button 
+                      onClick={handleReset}
+                      className="w-full py-3 bg-white border border-amber-200 text-amber-600 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Reset All Data
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (confirm('Clear all saved proposals?')) {
+                          setSavedProposals([]);
+                          localStorage.removeItem('chemizol_proposals');
+                        }
+                      }}
+                      className="w-full py-3 bg-white border border-red-200 text-red-600 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Clear History
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-indigo-900 rounded-xl text-white space-y-2">
+                  <div className="flex items-center gap-2 opacity-60">
+                    <Info className="w-3 h-3" />
+                    <span className="text-[8px] font-black uppercase tracking-widest">App Info</span>
+                  </div>
+                  <p className="text-[10px] font-bold leading-relaxed">
+                    Chemizol Report Generator v2.0.0<br/>
+                    Professional Water Treatment Solutions
+                  </p>
+                  <p className="text-[8px] opacity-40 font-medium">© 2024 Chemizol Water Solutions</p>
+                </div>
+              </div>
+            ) : activeTab === 'admin' && userProfile?.role === 'admin' ? (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 text-indigo-600 mb-4">
+                  <ShieldCheck className="w-4 h-4" />
+                  <h2 className="text-xs font-black uppercase tracking-widest">Admin Dashboard</h2>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Export Activity Logs</h3>
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600">
+                      <Activity className="w-3 h-3" />
+                      {exportLogs.length} Events
+                    </div>
+                  </div>
+
+                  {exportLogs.length === 0 ? (
+                    <div className="bg-slate-50 rounded-2xl p-8 text-center border border-dashed border-slate-200">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No activity recorded yet</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {exportLogs.map((log) => (
+                        <div key={log.id} className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-indigo-50 text-indigo-600 flex items-center justify-center rounded-full">
+                                <Download className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-800">{log.authorEmail}</p>
+                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                  {log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'Just now'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded text-[8px] font-black uppercase tracking-widest">
+                              Exported
+                            </div>
+                          </div>
+                          
+                          <div className="p-3 bg-slate-50 rounded-xl space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Customer</span>
+                              <span className="text-[10px] font-black text-slate-800">{log.customerName}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Report ID</span>
+                              <span className="text-[10px] font-black text-indigo-600">{log.proposalId}</span>
+                            </div>
+                          </div>
+
+                          {log.chemicalUsage && Object.keys(log.chemicalUsage).length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-slate-50">
+                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Chemical Usage Summary</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                {Object.entries(log.chemicalUsage).map(([name, dosage]: [string, any]) => (
+                                  <div key={name} className="flex justify-between items-center text-[9px]">
+                                    <span className="text-slate-600 truncate mr-2">{name}</span>
+                                    <span className="font-bold text-indigo-600">{dosage} ppm</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : null}
           </div>
 
             <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-3">
@@ -2029,8 +2365,10 @@ export default function App() {
       </AnimatePresence>
 
       {/* --- Main Content Area --- */}
-      <main className="flex-1 overflow-y-auto p-8 flex flex-col items-center relative no-scrollbar print:p-0">
-        {isExporting && (
+      <main className="flex-1 overflow-auto p-4 md:p-8 flex flex-col items-center relative no-scrollbar print:p-0 bg-slate-100/50">
+        <div className="w-full max-w-full overflow-x-auto no-scrollbar flex justify-center pb-20 md:pb-8">
+          <div className="min-w-fit transform-gpu scale-[0.65] sm:scale-[0.85] md:scale-100 origin-top transition-transform duration-300">
+            {isExporting && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center no-print">
             <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-xs text-center">
               <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
@@ -2042,12 +2380,20 @@ export default function App() {
           </div>
         )}
         {!isSidebarOpen && (
-          <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="fixed left-4 top-4 p-3 bg-white shadow-lg rounded-full hover:bg-slate-50 transition-colors z-30 no-print"
-          >
-            <Settings2 className="w-5 h-5 text-indigo-600" />
-          </button>
+          <>
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="hidden md:flex fixed left-4 top-4 p-3 bg-white shadow-lg rounded-full hover:bg-slate-50 transition-colors z-30 no-print"
+            >
+              <Settings2 className="w-5 h-5 text-indigo-600" />
+            </button>
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden fixed bottom-6 right-6 p-4 bg-indigo-600 text-white shadow-2xl rounded-full z-40 active:scale-90 transition-all no-print"
+            >
+              <Settings2 className="w-6 h-6" />
+            </button>
+          </>
         )}
 
         {/* --- A4 Paper Preview --- */}
@@ -2810,6 +3156,8 @@ export default function App() {
             min-height: 297mm;
           }
         `}} />
+          </div>
+        </div>
       </main>
     </div>
   );
@@ -2962,3 +3310,15 @@ function TableRow({ label, value, standard, status }: any) {
     </tr>
   );
 }
+
+const TabButton = ({ active, onClick, icon, label }: any) => (
+  <button 
+    onClick={onClick}
+    className={`flex flex-col items-center justify-center py-2.5 px-1 rounded-lg transition-all ${active ? 'bg-white shadow-md text-indigo-600 scale-105 z-10' : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'}`}
+  >
+    <div className={`mb-1 transition-transform ${active ? 'scale-110' : ''}`}>{icon}</div>
+    <span className="text-[8px] font-black uppercase tracking-tighter truncate w-full text-center">
+      {label}
+    </span>
+  </button>
+);
