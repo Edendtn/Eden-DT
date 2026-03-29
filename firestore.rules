@@ -10,20 +10,16 @@ service cloud.firestore {
     // Fields:
     //   - uid: string (required)
     //   - email: string (required)
-    //   - displayName: string (optional)
-    //   - photoURL: string (optional)
     //   - role: string (required, 'admin' | 'dealer')
-    //   - createdAt: timestamp (required)
     //
     // Collection: proposals
     // Document ID: {proposalId}
     // Fields:
     //   - id: string (required)
     //   - customerName: string (required)
-    //   - systemType: string (required, 'CHILLER' | 'COOLING_TOWER')
+    //   - systemType: string (required)
     //   - data: map (required)
-    //   - authorUid: string (required)
-    //   - authorEmail: string (required)
+    //   - authorEmail: string (optional/required for guest)
     //   - createdAt: timestamp (required)
     //
     // Collection: exportLogs
@@ -32,23 +28,14 @@ service cloud.firestore {
     //   - id: string (required)
     //   - proposalId: string (required)
     //   - customerName: string (required)
-    //   - authorUid: string (required)
     //   - authorEmail: string (required)
     //   - timestamp: timestamp (required)
     //   - chemicalUsage: map (optional)
     //
     // ===============================================================
 
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-    
     function isAuthenticated() {
       return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
     }
 
     function isAdmin() {
@@ -57,49 +44,8 @@ service cloud.firestore {
          (request.auth.token.email == "doantrungnghiavt@gmail.com" && request.auth.token.email_verified == true));
     }
 
-    function isDocOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.authorUid;
-    }
-
-    function hasRequiredFields(data, fields) {
-      return data.keys().hasAll(fields);
-    }
-
     function isValidEmail(email) {
       return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
-    }
-
-    // ===============================================================
-    // Domain Validators
-    // ===============================================================
-
-    function isValidUser(data) {
-      return hasRequiredFields(data, ['uid', 'email', 'role', 'createdAt']) &&
-             data.uid is string &&
-             isValidEmail(data.email) &&
-             data.role in ['admin', 'dealer'] &&
-             data.createdAt is timestamp;
-    }
-
-    function isValidProposal(data) {
-      return hasRequiredFields(data, ['id', 'customerName', 'systemType', 'data', 'authorUid', 'authorEmail', 'createdAt']) &&
-             data.id is string &&
-             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() < 200 &&
-             data.systemType in ['CHILLER', 'COOLING_TOWER'] &&
-             data.data is map &&
-             data.authorUid == request.auth.uid &&
-             isValidEmail(data.authorEmail) &&
-             data.createdAt is timestamp;
-    }
-
-    function isValidExportLog(data) {
-      return hasRequiredFields(data, ['id', 'proposalId', 'customerName', 'authorUid', 'authorEmail', 'timestamp']) &&
-             data.id is string &&
-             data.proposalId is string &&
-             data.customerName is string &&
-             data.authorUid == request.auth.uid &&
-             isValidEmail(data.authorEmail) &&
-             data.timestamp is timestamp;
     }
 
     // ===============================================================
@@ -108,20 +54,20 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if isAuthenticated();
-      allow create: if isOwner(uid) && isValidUser(request.resource.data) && (request.resource.data.role == 'dealer' || isAdmin());
-      allow update: if (isOwner(uid) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) || isAdmin();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == uid);
     }
 
     match /proposals/{proposalId} {
-      allow read: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && isValidProposal(request.resource.data);
-      allow update: if isAuthenticated() && isValidProposal(request.resource.data) && (resource.data.authorUid == request.auth.uid || isAdmin());
-      allow delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isAdmin());
+      // Allow anyone to read/write proposals so they can share links
+      allow read, write: if true; 
     }
 
     match /exportLogs/{logId} {
+      // Only admin can see logs
       allow read: if isAdmin();
-      allow create: if isAuthenticated() && isValidExportLog(request.resource.data);
+      // Anyone can create a log (when they download)
+      allow create: if request.resource.data.keys().hasAll(['id', 'proposalId', 'customerName', 'authorEmail', 'timestamp']) &&
+                      isValidEmail(request.resource.data.authorEmail);
     }
   }
 }

@@ -27,6 +27,7 @@ import {
   Settings,
   LogIn,
   LogOut,
+  Mail,
   User as UserIcon,
   ShieldCheck,
   Activity
@@ -953,7 +954,11 @@ export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [exportLogs, setExportLogs] = useState<any[]>([]);
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [guestEmail, setGuestEmail] = useState("");
+  const [pendingExportAction, setPendingExportAction] = useState<(() => void) | null>(null);
 
   const [data, setData] = useState<ReportData>(() => {
     const saved = localStorage.getItem('culligan_current_data');
@@ -1047,23 +1052,36 @@ export default function App() {
   });
 
   React.useEffect(() => {
+    // Safety timeout for loading state
+    const timeout = setTimeout(() => {
+      if (isAuthLoading) {
+        console.warn("Auth loading timed out");
+        setIsAuthLoading(false);
+      }
+    }, 8000);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setIsAuthLoading(true);
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        try {
+      clearTimeout(timeout);
+      try {
+        if (firebaseUser) {
+          setUser(firebaseUser);
           const profile = await syncUserProfile(firebaseUser);
           setUserProfile(profile);
-        } catch (error) {
-          console.error("Error syncing user profile:", error);
+        } else {
+          setUser(null);
+          setUserProfile(null);
         }
-      } else {
-        setUser(null);
-        setUserProfile(null);
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        setAuthError(error instanceof Error ? error.message : "Authentication failed");
+      } finally {
+        setIsAuthLoading(false);
       }
-      setIsAuthLoading(false);
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -1096,8 +1114,9 @@ export default function App() {
     }
   };
 
-  const logExport = async () => {
-    if (!user || !data) return;
+  const logExport = async (emailToUse?: string) => {
+    const email = emailToUse || userProfile?.email || user?.email || "guest@example.com";
+    const logId = `log_${Date.now()}`;
     
     try {
       const chemicalUsage: any = {};
@@ -1112,16 +1131,27 @@ export default function App() {
       }
 
       await addDoc(collection(db, 'exportLogs'), {
-        id: crypto.randomUUID(),
+        id: logId,
         proposalId: data.reportId,
         customerName: data.customerName,
-        authorUid: user.uid,
-        authorEmail: user.email,
+        authorUid: user?.uid || "guest",
+        authorEmail: email,
         timestamp: serverTimestamp(),
         chemicalUsage
       });
+      console.log("Export logged successfully for:", email);
     } catch (error) {
       console.error("Failed to log export:", error);
+    }
+  };
+
+  const checkEmailAndExport = (action: () => void) => {
+    if (user || guestEmail) {
+      action();
+      logExport(guestEmail);
+    } else {
+      setPendingExportAction(() => action);
+      setShowEmailPrompt(true);
     }
   };
 
@@ -1210,90 +1240,86 @@ export default function App() {
   const handlePrint = async () => {
     if (!reportRef.current || isExporting) return;
 
-    setIsExporting(true);
-    
-    try {
-      const element = reportRef.current;
+    checkEmailAndExport(async () => {
+      setIsExporting(true);
       
-      // Capture the element as a canvas
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc) => {
-          const clonedElement = clonedDoc.querySelector('.a4-page') as HTMLElement;
-          if (clonedElement) {
-            clonedElement.style.boxShadow = 'none';
-            clonedElement.style.margin = '0';
-            clonedElement.style.overflow = 'visible';
+      try {
+        const element = reportRef.current!;
+        
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
+          onclone: (clonedDoc) => {
+            const clonedElement = clonedDoc.querySelector('.a4-page') as HTMLElement;
+            if (clonedElement) {
+              clonedElement.style.boxShadow = 'none';
+              clonedElement.style.margin = '0';
+              clonedElement.style.overflow = 'visible';
+            }
           }
-        }
-      });
+        });
 
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      // Calculate how many pages we need
-      const ratio = pdfWidth / imgWidth;
-      const canvasHeightOnPdf = imgHeight * ratio;
-      
-      let heightLeft = canvasHeightOnPdf;
-      let position = 0;
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+        
+        const ratio = pdfWidth / imgWidth;
+        const canvasHeightOnPdf = imgHeight * ratio;
+        
+        let heightLeft = canvasHeightOnPdf;
+        let position = 0;
 
-      // Add first page
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
-      heightLeft -= pdfHeight;
-
-      // Add subsequent pages if content overflows
-      while (heightLeft > 0) {
-        position = heightLeft - canvasHeightOnPdf;
-        pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
         heightLeft -= pdfHeight;
-      }
-      
-      const fileName = `Culligan_Report_${data.customerName.replace(/\s+/g, '_') || 'Report'}_${data.reportId}.pdf`;
 
-      pdf.setProperties({
-        title: fileName,
-        subject: 'Culligan Technical Report',
-        author: data.engineerName,
-        creator: 'Industrial Report Generator'
-      });
+        while (heightLeft > 0) {
+          position = heightLeft - canvasHeightOnPdf;
+          pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, canvasHeightOnPdf, undefined, 'FAST');
+          heightLeft -= pdfHeight;
+        }
+        
+        const fileName = `Culligan_Report_${data.customerName.replace(/\s+/g, '_') || 'Report'}_${data.reportId}.pdf`;
 
-      // Try multiple download methods
-      try {
-        pdf.save(fileName);
-      } catch (saveError) {
-        // Fallback: create a blob and download manually
-        const blob = pdf.output('blob');
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        pdf.setProperties({
+          title: fileName,
+          subject: 'Culligan Technical Report',
+          author: data.engineerName,
+          creator: 'Industrial Report Generator'
+        });
+
+        try {
+          pdf.save(fileName);
+        } catch (saveError) {
+          const blob = pdf.output('blob');
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      } catch (error) {
+        console.error('PDF Export failed:', error);
+        alert('Có lỗi khi xuất PDF. Vui lòng thử mở ứng dụng trong tab mới hoặc sử dụng tính năng In (Ctrl+P).');
+      } finally {
+        setIsExporting(false);
       }
-    } catch (error) {
-      console.error('PDF Export failed:', error);
-      alert('Có lỗi khi xuất PDF. Vui lòng thử mở ứng dụng trong tab mới hoặc sử dụng tính năng In (Ctrl+P).');
-    } finally {
-      setIsExporting(false);
-    }
+    });
   };
 
   const handleOpenNewTab = () => {
@@ -1301,8 +1327,9 @@ export default function App() {
   };
 
   const handleSystemPrint = async () => {
-    window.print();
-    await logExport();
+    checkEmailAndExport(() => {
+      window.print();
+    });
   };
 
   const updateChemical = (index: number, field: keyof ChemicalRow, value: any) => {
@@ -1374,36 +1401,7 @@ export default function App() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md bg-white rounded-3xl shadow-2xl shadow-indigo-100/50 p-8 border border-slate-100 text-center"
-        >
-          <div className="w-20 h-20 bg-indigo-600 flex items-center justify-center rounded-3xl shadow-xl shadow-indigo-200 mx-auto mb-8">
-            <Calculator className="text-white w-10 h-10" />
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Culligan Technical</h1>
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-8">Professional Report Generator</p>
-          
-          <div className="space-y-4">
-            <button 
-              onClick={handleLogin}
-              className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-sm transition-all active:scale-95 flex items-center justify-center gap-3 shadow-lg shadow-indigo-100"
-            >
-              <img src="https://www.google.com/favicon.ico" alt="Google" className="w-5 h-5 bg-white rounded-full p-0.5" />
-              Sign in with Google
-            </button>
-            <p className="text-[10px] text-slate-400 font-medium px-4">
-              Authorized access only. By signing in, you agree to our terms of service and data privacy policy.
-            </p>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
+  // Removed mandatory login screen
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-900 overflow-hidden">
@@ -1469,7 +1467,7 @@ export default function App() {
 
             <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-6">
               {/* User Profile */}
-              {user && (
+              {user ? (
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {user.photoURL ? (
@@ -1492,6 +1490,14 @@ export default function App() {
                     <LogOut className="w-4 h-4" />
                   </button>
                 </div>
+              ) : (
+                <button 
+                  onClick={handleLogin}
+                  className="w-full p-3 bg-indigo-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-100"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign in with Google
+                </button>
               )}
               {/* Quick Actions in Sidebar */}
               <div className="flex items-center justify-between px-2">
@@ -3159,6 +3165,79 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* --- Email Prompt Modal --- */}
+      <AnimatePresence>
+        {showEmailPrompt && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[110] flex items-center justify-center p-4 no-print"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="w-16 h-16 bg-indigo-100 text-indigo-600 flex items-center justify-center rounded-2xl mb-6 mx-auto">
+                  <Mail className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 text-center mb-2">Xác nhận Email</h3>
+                <p className="text-slate-500 text-center text-sm mb-8">
+                  Vui lòng nhập email của bạn để tiếp tục tải báo cáo. Chúng tôi sẽ lưu lại thông tin xuất file này.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email Address</label>
+                    <input 
+                      type="email"
+                      placeholder="your@email.com"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3 pt-4">
+                    <button 
+                      onClick={() => {
+                        setShowEmailPrompt(false);
+                        setPendingExportAction(null);
+                      }}
+                      className="py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest transition-all"
+                    >
+                      Hủy bỏ
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (!guestEmail || !guestEmail.includes('@')) {
+                          alert('Vui lòng nhập email hợp lệ');
+                          return;
+                        }
+                        setShowEmailPrompt(false);
+                        if (pendingExportAction) pendingExportAction();
+                        setPendingExportAction(null);
+                      }}
+                      className="py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-indigo-100"
+                    >
+                      Tiếp tục
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Hoặc <button onClick={handleLogin} className="text-indigo-600 hover:underline">Đăng nhập bằng Google</button>
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
