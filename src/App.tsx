@@ -128,7 +128,7 @@ const TRANSLATIONS = {
       descTotalGuard: 'Hóa chất ức chế ăn mòn và cáu cặn đa năng cho hệ thống giải nhiệt hở.',
       descDepositGuard: 'Hóa chất ức chế cáu cặn và phân tán bùn sét, ngăn ngừa lắng đọng.',
       descBioGuard41: 'Hóa chất diệt khuẩn dạng oxy hóa mạnh, kiểm soát rong rêu và vi sinh vật.',
-      descBioGuard40: 'Hóa chất diệt khuẩn dạng không oxy hóa, hiệu quả cao trong việc kiểm soát màng sinh học.',
+      descBioGuard40: 'Culligan Bio Guard 40H16: Hóa chất diệt khuẩn dạng không oxy hóa, hiệu quả cao trong việc kiểm soát màng sinh học.',
       descCorroGuard: 'Hóa chất ức chế ăn mòn và cáu cặn chuyên dụng cho hệ thống nước lạnh kín (Chilled water).',
       descBioGuard40Chiller: 'Culligan Bio Guard 40H16: Hóa chất diệt khuẩn không oxy hóa, kiểm soát vi sinh vật và màng sinh học trong hệ thống kín.',
     },
@@ -215,8 +215,8 @@ const TRANSLATIONS = {
       nonOxidizing: 'Diệt vi sinh không oxy hóa',
     },
     defaults: {
-      chillerNotes: "Cách châm hóa chất:\n+ Culligan Corro Guard 33L01: châm định kì hằng tháng bằng thiết bị theo chỉ dẫn\n+ Culligan Bio Guard 40H16: châm định kì hằng tuần/tháng bằng thiết bị theo chỉ dẫn\n*kg/lần: chỉ áp dụng cho những hệ thống mới \nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
-      towerNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
+      chillerNotes: "Cách châm hóa chất:\n+ Culligan Corro Guard 33L01: châm định kì hằng tháng bằng thiết bị theo chỉ dẫn\n+ Culligan Bio Guard 40H16: châm định kì hằng tuần/tháng bằng thiết bị theo chỉ dẫn\n*kg/lần: chỉ áp dụng cho những hệ thống mới\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
+      towerNotes: "Cách châm hóa chất:\n+ Culligan Total Guard 20C04: châm liên tục, hệ thống châm\n+ Culligan Bio Guard 41H01: châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n+ Culligan Bio Guard 40H16: châm tay theo chỉ dẫn.\n+ Hóa chất khác (nếu có): châm liên tục bằng hệ thống châm hoặc châm tay theo chỉ dẫn.\n\nHóa chất được tính toán cho hệ thống hoạt động 24giờ/ ngày, 30 ngày/ tháng.\nDuy trì nồng độ hóa chất theo đúng hướng dẫn kỹ thuật.\nKiểm tra định kỳ các thông số nước 1 lần/tuần.\nKiểm tra vệ sinh hệ thống châm hóa chất định kỳ hàng tháng",
       chillerRecs: [
         { title: "Kiểm soát rò rỉ", desc: "Theo dõi và khắc phục các điểm rò rỉ để duy trì nồng độ hóa chất ổn định." },
         { title: "Kiểm tra định kỳ", desc: "Phân tích mẫu nước hàng tuần để điều chỉnh liều lượng hóa chất phù hợp." },
@@ -224,12 +224,12 @@ const TRANSLATIONS = {
         { title: "Bảo trì chiller", desc: "Theo dõi hiệu suất trao đổi nhiệt và thực hiện tẩy rửa nếu cần thiết." }
       ],
       towerRecs: [
-        { title: "Vệ sinh tháp", desc: "Súc xả đáy tháp để loại bỏ bùn lắng và cặn hữu cơ mỗi 3 tháng và thay nước mới." },
-        { title: "Kiểm soát Blowdown", desc: "Đảm bảo duy trì việc xả đáy (van xả đáy tự động/ mở van tay) dựa trên độ dẫn điện duy trì COC 4.5 - 5.0, để loại bỏ bớt tạm chất trong tháp" },
-        { title: "Liều lượng diệt vi sinh", desc: "Tăng liều sốc diệt khuẩn vi sinh rong rêu trong mùa mưa hoặc khi nhiệt độ nước cao." },
-        { title: "Bảo trì thiết bị", desc: "Hiệu chuẩn cảm biến pH và Conductivity hàng tháng đảm bảo chính xác. Kiểm tra hệ thống châm đảm bảo hoạt động ổn định." }
+        { title: "Vệ sinh tháp", desc: "Súc xả đáy tháp để loại bỏ bùn lắng và cặn hữu cơ mỗi 3 tháng." },
+        { title: "Kiểm soát Blowdown", desc: "Điều chỉnh van xả đáy tự động dựa trên độ dẫn điện duy trì COC 4.5 - 5.0." },
+        { title: "Liều lượng diệt vi sinh", desc: "Tăng liều sốc diệt khuẩn trong mùa mưa hoặc khi nhiệt độ nước cao." },
+        { title: "Bảo trì thiết bị", desc: "Hiệu chuẩn cảm biến pH và Conductivity hàng tháng đảm bảo chính xác." }
       ],
-      summaryTitle: 'hệ thống',
+      summaryTitle: 'Chỉ số hiệu quả hệ thống',
     }
   },
   EN: {
@@ -415,8 +415,8 @@ const TRANSLATIONS = {
       nonOxidizing: 'Non-Oxidizing Biocide',
     },
     defaults: {
-      chillerNotes: "Chemical Dosing Method:\n+ Culligan Corro Guard 33L01: Dose monthly using equipment as instructed\n+ Culligan Bio Guard 40H16: Dose weekly/monthly using equipment as instructed\n*kg/initial: Only applies to new systems\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
-      towerNotes: "Chemical Dosing Method:\n+ Culligan Total Guard 20C04: Continuous dosing, dosing system\n+ Culligan Bio Guard 41H01: Continuous dosing by system or manual as instructed.\n+ Culligan Bio Guard 40H16: Manual dosing as instructed.\n+ Other chemicals (if any): Continuous dosing by system or manual as instructed.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
+      chillerNotes: "Chemical Dosing Method:\n+ Culligan Corro Guard 33L01: Dose monthly using equipment as instructed\n+ Culligan Bio Guard 40H16: Dose weekly/monthly using equipment as instructed\n*kg/initial: Only applies to new systems\n\nChemicals calculated for 24h/day, 30 days/month operation.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
+      towerNotes: "Chemical Dosing Method:\n+ Culligan Total Guard 20C04: Continuous dosing, dosing system\n+ Culligan Bio Guard 41H01: Continuous dosing by system or manual as instructed.\n+ Culligan Bio Guard 40H16: Manual dosing as instructed.\n+ Other chemicals (if any): Continuous dosing by system or manual as instructed.\n\nChemicals calculated for 24h/day, 30 days/month operation.\nMaintain chemical concentration according to technical instructions.\nPeriodically check water parameters once a week.\nPeriodically check and clean chemical dosing system monthly",
       chillerRecs: [
         { title: "Leakage Control", desc: "Monitor and fix leak points to maintain stable chemical concentration." },
         { title: "Periodic Testing", desc: "Analyze water samples weekly to adjust chemical dosage appropriately." },
@@ -424,12 +424,12 @@ const TRANSLATIONS = {
         { title: "Chiller Maintenance", desc: "Monitor heat exchange performance and perform cleaning if necessary." }
       ],
       towerRecs: [
-        { title: "Tower Cleaning", desc: "Flush the cooling tower basin every three months to remove sediment and organic debris, then perform a full water replacement" },
-        { title: "Blowdown Control", desc: "Maintain continuous blowdown (via automatic or manual valves) to keep the Cycles of Concentration (COC) between 4.5 and 5.0, ensuring effective removal of impurities." },
-        { title: "Biocide Dosage", desc: "Increase disinfectant shock dosing during the rainy season or periods of high water temperature to prevent biological growth." },
-        { title: "Equipment Maintenance", desc: "Perform monthly calibration of pH and conductivity sensors to maintain accuracy. Regularly inspect the dosing system for stable operation" }
+        { title: "Tower Cleaning", desc: "Flush tower basin to remove sludge and organic deposits every 3 months." },
+        { title: "Blowdown Control", desc: "Adjust automatic blowdown valve based on conductivity to maintain COC 4.5 - 5.0." },
+        { title: "Biocide Dosage", desc: "Increase biocide shock dose during rainy season or high water temperature." },
+        { title: "Equipment Maintenance", desc: "Calibrate pH and Conductivity sensors monthly to ensure accuracy." }
       ],
-      summaryTitle: 'System',
+      summaryTitle: 'System Efficiency Index',
     }
   }
 };
@@ -580,9 +580,9 @@ interface ReportData {
 const INITIAL_DATA: ReportData = {
   systemType: 'CHILLER',
   customerName: "VINAMILK FACTORY",
-  projectName: "VN-CHEMIZOL",
+  projectName: "VN-CHILL-NORTH",
   reportId: "CH-2024-089",
-  engineerName: "ENG. NGHIA",
+  engineerName: "ENG. MINH TRAN",
   date: new Date().toLocaleDateString('en-GB'),
   pageNumber: "1/1",
   
@@ -774,7 +774,7 @@ const calculateMetrics = (data: ReportData) => {
     // B = -13.12 * log10(Temp + 273) + 34.55
     const B = -13.12 * Math.log10(data.tempOut + 273) + 34.55;
     // C = log10(Calcium Hardness) - 0.4
-    const C = Math.log10(Math.max(1, data.measuredHardness*0.8)) - 0.4;
+    const C = Math.log10(Math.max(1, data.measuredHardness)) - 0.4;
     // D = log10(M-Alkalinity)
     const D = Math.log10(Math.max(1, data.measuredMAlk));
     const phs = (9.3 + A + B) - (C + D);
@@ -790,30 +790,29 @@ const calculateMetrics = (data: ReportData) => {
     let kgInitial = 0;
 
     if (data.systemType === 'CHILLER') {
-      if (chem.name === data.chillerCorroGuardName) {
+      if (chem.type === "corrosionScale") {
         kgInitial = (chem.dosage * data.systemVolume) / 1000;
         kgMonth = (chem.dosage * data.systemVolume * data.systemLeakage / 100) / 1000;
         kgDay = 0;
         kgYear = kgMonth * 12;
-      } else if (chem.name === data.chillerBioGuardName) {
+      } else if (chem.type === "microbiological") {
         kgMonth = (data.systemVolume * chem.dosage * 2) / 1000;
         kgDay = kgMonth / 30;
         kgYear = kgMonth * 12;
       }
     } else {
       // COOLING TOWER
-      if (chem.name === data.coolingTotalGuardName || 
-          chem.name === "Culligan Total Guard 20C23" || 
-          chem.name === "Culligan Total Guard 20C04") {
+      if (chem.type === "scaleCorrosion") {
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
-      } else if (chem.name === data.coolingDepositGuardName || chem.name.includes("22C55")) {
+      } else if (chem.type === "dispersant") {
         // Formula: kg/day = (Blowdown * Dosage * Operating Hour) / 1000
         kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
         kgMonth = kgDay * data.operatingDaysPerMonth;
         kgYear = kgMonth * 12;
-        if (chem.name.includes("NAOCL")) {
+      } else if (chem.type === "oxidizing") {
+        if (chem.name.toUpperCase().includes("NAOCL")) {
           kgDay = ((chem.dosage/10) * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * data.operatingHours) / 1000;
           kgMonth = kgDay * data.operatingDaysPerMonth;
           kgYear = kgMonth * 12;
@@ -822,7 +821,7 @@ const calculateMetrics = (data: ReportData) => {
           kgDay = kgMonth / data.operatingDaysPerMonth;
           kgYear = kgMonth * 12;
         }
-      } else if (chem.name === "Culligan Bio Guard 40H16" || chem.name === data.coolingBioGuard40Name) {
+      } else if (chem.type === "nonOxidizing") {
         kgMonth = (chem.dosage * data.systemVolume * 2) / 1000;
         kgDay = 0; 
         kgYear = kgMonth * 12;
@@ -925,7 +924,7 @@ export default function App() {
         // Fix types
         migrated.forEach(chem => {
           if (chem.name.includes("22C55")) chem.type = "dispersant";
-          else if (chem.name.includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
+          else if (chem.name.toUpperCase().includes("NAOCL") || chem.name.includes("41H01")) chem.type = "oxidizing";
           else if (chem.name.includes("Total Guard")) chem.type = "scaleCorrosion";
           else if (chem.name.includes("40H16")) chem.type = "nonOxidizing";
         });
@@ -1168,26 +1167,40 @@ export default function App() {
     const fieldName = data.systemType === 'CHILLER' ? 'chillerChemicals' : 'towerChemicals';
     const newChems = [...data[fieldName]];
     const oldName = newChems[index].name;
+    const newData = { ...data };
     
     let updatedChem = { ...newChems[index], [field]: value };
     
     // Auto-update type if name changes
     if (field === 'name') {
       if (data.systemType === 'COOLING_TOWER') {
-        if (value.includes("Total Guard")) updatedChem.type = "scaleCorrosion";
-        else if (value.includes("22C55")) updatedChem.type = "dispersant";
-        else if (value.includes("NAOCL")) || value.includes("41H01")) updatedChem.type = "oxidizing";
-        else if (value.includes("40H16")) updatedChem.type = "nonOxidizing";
+        if (index === 0) {
+          updatedChem.type = "scaleCorrosion";
+          newData.coolingTotalGuardName = value;
+        } else if (index === 1) {
+          updatedChem.type = "dispersant";
+          newData.coolingDepositGuardName = value;
+        } else if (index === 2) {
+          updatedChem.type = "oxidizing";
+          newData.coolingBioGuardName = value;
+        } else if (index === 3) {
+          updatedChem.type = "nonOxidizing";
+          newData.coolingBioGuard40Name = value;
+        }
       } else {
         // Chiller
-        if (value.includes("33L01")) updatedChem.type = "corrosionScale";
-        else if (value.includes("40H16")) updatedChem.type = "microbiological";
+        if (index === 0) {
+          updatedChem.type = "corrosionScale";
+          newData.chillerCorroGuardName = value;
+        } else if (index === 1) {
+          updatedChem.type = "microbiological";
+          newData.chillerBioGuardName = value;
+        }
       }
     }
     
     newChems[index] = updatedChem;
-    
-    let newData = { ...data, [fieldName]: newChems };
+    newData[fieldName] = newChems;
     
     // If name changed, update operating notes if they contain the old name
     if (field === 'name' && oldName !== value) {
@@ -1517,31 +1530,36 @@ export default function App() {
                       <div className="flex flex-col gap-1">
                         <label className="text-[10px] font-bold text-slate-800 uppercase tracking-wider">{t.report.chemical}</label>
                         {data.systemType === 'COOLING_TOWER' ? (
-                          <select 
-                            value={chem.name}
-                            onChange={(e) => updateChemical(i, 'name', e.target.value)}
-                            className="w-full bg-white border border-slate-200 px-2 py-1.5 text-sm font-medium focus:ring-0 focus:border-indigo-500 transition-colors rounded-md"
-                          >
-                            {i === 0 ? (
-                              <>
-                                <option value="Culligan Total Guard 20C23">Culligan Total Guard 20C23</option>
-                                <option value="Culligan Total Guard 20C04">Culligan Total Guard 20C04</option>
-                              </>
-                            ) : (
-                              <>
-                                <option value="Culligan Deposit Guard 22C55">Culligan Deposit Guard 22C55</option>
-                              </>
-                            ) : i === 2 ? (
-                              <>
-                                <option value="Culligan Bio Guard 41H01">Culligan Bio Guard 41H01</option>
-                                <option value="NaOCl 10%">NaOCl 10%</option>
-                              </>
-                            ) : (
-                              <>
-                                <option value="Culligan Bio Guard 40H16">Culligan Bio Guard 40H16</option>
-                              </>
-                            )}
-                          </select>
+                          i === 1 ? (
+                            <input 
+                              type="text"
+                              value={chem.name}
+                              onChange={(e) => updateChemical(i, 'name', e.target.value)}
+                              className="w-full bg-white border border-slate-200 px-2 py-1.5 text-sm font-medium focus:ring-0 focus:border-indigo-500 transition-colors rounded-md"
+                            />
+                          ) : (
+                            <select 
+                              value={chem.name}
+                              onChange={(e) => updateChemical(i, 'name', e.target.value)}
+                              className="w-full bg-white border border-slate-200 px-2 py-1.5 text-sm font-medium focus:ring-0 focus:border-indigo-500 transition-colors rounded-md"
+                            >
+                              {i === 0 ? (
+                                <>
+                                  <option value="Culligan Total Guard 20C04">Culligan Total Guard 20C04</option>
+                                  <option value="Culligan Total Guard 20C23">Culligan Total Guard 20C23</option>
+                                </>
+                              ) : i === 2 ? (
+                                <>
+                                  <option value="Culligan Bio Guard 41H01">Culligan Bio Guard 41H01</option>
+                                  <option value="NaOCl 10%">NaOCl 10%</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="Culligan Bio Guard 40H16">Culligan Bio Guard 40H16</option>
+                                </>
+                              )}
+                            </select>
+                          )
                         ) : (
                           <input 
                             type="text"
@@ -2564,10 +2582,10 @@ export default function App() {
                       
                       {/* Chilled Water Loop (Evaporator) - Blue */}
                       <path d="M60 45 L-10 45" fill="none" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrow-blue)" />
-                      <text x="-45" y="40" className="text-[10px] font-bold fill-blue-600">{t.chiller.supply}: {data.tempOut > 0 ? `${data.tempOut}°C` : "-"}</text>
+                      <text x="-45" y="40" className="text-[8px] font-bold fill-blue-600">{t.chiller.supply}: {data.tempOut > 0 ? `${data.tempOut}°C` : "-"}</text>
                       
                       <path d="M-10 75 L60 75" fill="none" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrow-blue)" />
-                      <text x="-45" y="85" className="text-[10px] font-bold fill-blue-600">{t.chiller.return}: {data.tempIn > 0 ? `${data.tempIn}°C` : "-"}</text>
+                      <text x="-45" y="85" className="text-[8px] font-bold fill-blue-600">{t.chiller.return}: {data.tempIn > 0 ? `${data.tempIn}°C` : "-"}</text>
                       
                       {/* Condenser Water Loop - Red/Orange */}
                       <path d="M140 45 L185 45" fill="none" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow-orange)" />
@@ -2594,8 +2612,8 @@ export default function App() {
                 </div>
                 {data.systemType === 'CHILLER' ? (
                   <>
-                    <DataRow label={t.labels.tempOut} value={formatNumber(data.tempOut, 1) + " °C"} large />
-                    <DataRow label={t.labels.tempIn} value={formatNumber(data.tempIn, 1) + " °C"} large />
+                    <DataRow label={t.labels.tempOut} value={formatNumber(data.tempOut, 1) + " °C"} />
+                    <DataRow label={t.labels.tempIn} value={formatNumber(data.tempIn, 1) + " °C"} />
                     <DataRow label={t.labels.deltaT} value={formatNumber(metrics.deltaT, 1) + " °C"} />
                     <DataRow label={t.labels.load} value={formatNumber(metrics.loadPercentage, 1) + "%"} />
                     <div className="pt-2 mt-2 border-t border-indigo-100">
@@ -2707,7 +2725,7 @@ export default function App() {
                         <td className="p-1.5 font-semibold text-center">{formatNumber(chem.kgInitial, 1)}</td>
                       )}
                       <td className="p-1.5 font-semibold text-center">
-                        {data.systemType === 'COOLING_TOWER' && chem.name === "Culligan Bio Guard 40H16" ? "-" : formatNumber(chem.kgDay, 1)}
+                        {data.systemType === 'COOLING_TOWER' && chem.type === "nonOxidizing" ? "-" : formatNumber(chem.kgDay, 1)}
                       </td>
                       <td className="p-1.5 font-semibold text-center">{formatNumber(chem.kgMonth, 1)}</td>
                       <td className="p-1.5 font-semibold text-center">{formatNumber(chem.kgYear, 0)}</td>
@@ -2721,7 +2739,7 @@ export default function App() {
                       </td>
                     )}
                     <td className="p-1.5 text-center">
-                      {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.name === "Culligan Bio Guard 40H16" ? 0 : c.kgDay), 0), 1)}
+                      {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.type === "nonOxidizing" ? 0 : c.kgDay), 0), 1)}
                     </td>
                     <td className="p-1.5 text-center">
                       {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + c.kgMonth, 0), 1)}
