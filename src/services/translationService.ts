@@ -88,8 +88,26 @@ export async function translateReportData(data: any, targetLang: 'EN' | 'VI') {
       }
     });
 
-    const text = response.text;
+    let text = response.text;
     if (!text) return data;
+
+    // Clean text in case of markdown fences or trailing characters
+    text = text.trim();
+    if (text.startsWith("```json")) {
+      text = text.replace(/^```json\s*/, "").replace(/\s*```$/, "");
+    } else if (text.startsWith("```")) {
+      text = text.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    }
+
+    // Modern JS engines handle trailing whitespace, but "after JSON" error 
+    // suggests non-whitespace characters. We can try to find the last '}'
+    const lastBraceIndex = text.lastIndexOf('}');
+    const lastBracketIndex = text.lastIndexOf(']');
+    const lastIndex = Math.max(lastBraceIndex, lastBracketIndex);
+    
+    if (lastIndex !== -1 && lastIndex < text.length - 1) {
+      text = text.substring(0, lastIndex + 1);
+    }
 
     const translated = JSON.parse(text);
     
