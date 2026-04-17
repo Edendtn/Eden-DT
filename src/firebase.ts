@@ -110,7 +110,19 @@ export async function syncUserProfile(user: FirebaseUser): Promise<UserProfile> 
       return newProfile;
     }
     return userDoc.data() as UserProfile;
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes('offline')) {
+      console.warn("Client offline. Returning fallback user profile.");
+      const isAdmin = user.email === 'doantrungnghiavt@gmail.com';
+      return {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        photoURL: user.photoURL || '',
+        role: isAdmin ? 'admin' : 'dealer',
+        createdAt: new Date(),
+      };
+    }
     handleFirestoreError(error, OperationType.WRITE, `users/${user.uid}`);
     throw error;
   }
