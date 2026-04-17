@@ -380,12 +380,12 @@ const TRANSLATIONS = {
     intro: {
       heritage: 'CULLIGAN HERITAGE',
       since: 'Since 1921',
-      distributor: 'Authorized Culligan Distributor',
+      distributor: 'Authorized Culligan Partner',
       aboutTitle: 'Culligan - Industrial Water Treatment Experts',
-      aboutText: 'With over 100 years of experience, Culligan is a trusted partner in providing comprehensive water treatment solutions. We combine advanced equipment with specialized chemicals to optimize system performance.',
-      coolingFocusTitle: 'COOLING WATER MANAGEMENT',
-      coolingFocusText: 'Culligan\'s chemical solutions focus on addressing the 4 core challenges in cooling tower and chiller systems:',
-      solutionsTitle: 'KEY CONTROL AREAS',
+      aboutText: 'With over 100 years of global expertise, Culligan is a trusted partner in providing comprehensive water treatment solutions. We integrate advanced equipment with specialized chemicals to maximize system performance and longevity.',
+      coolingFocusTitle: 'COOLING WATER SOLUTIONS',
+      coolingFocusText: 'Culligan\'s chemical solutions focus on addressing the four core challenges in cooling tower and chiller systems:',
+      solutionsTitle: 'CORE AREAS OF CONTROL',
       scale: {
         title: 'Scale Control',
         desc: 'Preventing mineral buildup on heat exchange surfaces to maintain maximum thermal efficiency.'
@@ -396,11 +396,11 @@ const TRANSLATIONS = {
       },
       fouling: {
         title: 'Fouling Control',
-        desc: 'Using dispersants to keep suspended solids from settling and preventing system blockages.'
+        desc: 'Utilizing dispersants to keep suspended solids from settling and preventing system blockages.'
       },
       microbio: {
         title: 'Microbiological Control',
-        desc: 'Utilizing biocides to prevent biofilm formation and the growth of harmful pathogens.'
+        desc: 'Implementing biocides to prevent biofilm formation and the growth of harmful pathogens.'
       }
     },
     units: {
@@ -771,18 +771,18 @@ const INITIAL_DATA: ReportData = {
   descBioGuard40Chiller: "Diệt vi sinh không oxy hóa, hiệu cao trong việc kiểm soát màng sinh học.",
 
   // Intro Defaults (will be overwritten by translation-based init if needed)
-  introAboutTitle: "Culligan - Chuyên gia Xử lý Nước Công nghiệp",
-  introAboutText: "Với hơn 100 năm kinh nghiệm, Culligan là đối tác tin cậy trong việc cung cấp các giải pháp xử lý nước toàn diện. Chúng tôi kết hợp giữa thiết bị tiên tiến và hóa chất chuyên dụng để tối ưu hóa hiệu suất hệ thống.",
-  introCoolingFocusTitle: "KIỂM SOÁT NƯỚC GIẢI NHIỆT",
-  introCoolingFocusText: "Giải pháp hóa chất của Culligan tập trung vào việc giải quyết 4 thách thức cốt lõi trong hệ thống tháp giải nhiệt và chiller:",
+  introAboutTitle: "Culligan - Đối tác Chuyên gia Xử lý Nước Toàn cầu",
+  introAboutText: "Với hơn 100 năm di sản và kinh nghiệm, Culligan là đơn vị dẫn đầu thế giới trong việc cung cấp các giải pháp xử lý nước toàn diện. Chúng tôi kết hợp giữa thiết bị công nghệ cao và các giải pháp hóa chất chuyên sâu để tối ưu hóa hiệu suất và tuổi thọ hệ thống của khách hàng.",
+  introCoolingFocusTitle: "GIẢI PHÁP KIỂM SOÁT NƯỚC GIẢI NHIỆT",
+  introCoolingFocusText: "Chương trình xử lý hóa chất của Culligan được thiết kế để giải quyết triệt để 4 thách thức cốt lõi trong hệ thống tháp giải nhiệt và chiller:",
   introScaleTitle: "Kiểm soát Cáu cặn",
-  introScaleDesc: "Ngăn ngừa sự tích tụ khoáng chất trên bề mặt trao đổi nhiệt, duy trì hiệu suất truyền nhiệt tối đa.",
+  introScaleDesc: "Ngăn ngừa sự tích tụ khoáng chất trên các bề mặt trao đổi nhiệt, duy trì hiệu suất truyền nhiệt tối đa và tiết kiệm năng lượng.",
   introCorrosionTitle: "Kiểm soát Ăn mòn",
-  introCorrosionDesc: "Bảo vệ các bề mặt kim loại khỏi sự xuống cấp, kéo dài tuổi thọ thiết bị và giảm chi phí bảo trì.",
-  introFoulingTitle: "Kiểm soát Lắng đọng",
-  introFoulingDesc: "Sử dụng các chất phân tán để giữ cho các chất lơ lửng không bị lắng đọng, ngăn ngừa tắc nghẽn.",
-  introMicrobioTitle: "Kiểm soát Vi sinh",
-  introMicrobioDesc: "Sử dụng các chất diệt khuẩn để ngăn ngừa màng sinh học và sự phát triển của vi khuẩn có hại.",
+  introCorrosionDesc: "Bảo vệ các bề mặt kim loại khỏi sự xâm thực, kéo dài đáng kể vòng đời thiết bị và giảm thiểu chi phí bảo trì phát sinh.",
+  introFoulingTitle: "Ngăn ngừa Lắng đọng",
+  introFoulingDesc: "Sử dụng các chất phân tán tiên tiến để giữ các chất lơ lửng không bị lắng đọng, đảm bảo hệ thống đường ống luôn sạch và thông suốt.",
+  introMicrobioTitle: "Kiểm soát Vi sinh vật",
+  introMicrobioDesc: "Triển khai các chương trình diệt khuẩn chính xác để ngăn ngừa màng sinh học và sự phát triển của vi khuẩn có hại.",
 };
 
   // --- Calculations ---
@@ -1236,6 +1236,24 @@ export default function App() {
         towerOperatingNotes: t.defaults.towerNotes,
         chillerRecommendations: t.defaults.chillerRecs,
         towerRecommendations: t.defaults.towerRecs,
+        introAboutTitle: t.intro.aboutTitle,
+        introAboutText: t.intro.aboutText,
+        introCoolingFocusTitle: t.intro.coolingFocusTitle,
+        introCoolingFocusText: t.intro.coolingFocusText,
+        introScaleTitle: t.intro.scale.title,
+        introScaleDesc: t.intro.scale.desc,
+        introCorrosionTitle: t.intro.corrosion.title,
+        introCorrosionDesc: t.intro.corrosion.desc,
+        introFoulingTitle: t.intro.fouling.title,
+        introFoulingDesc: t.intro.fouling.desc,
+        introMicrobioTitle: t.intro.microbio.title,
+        introMicrobioDesc: t.intro.microbio.desc,
+        descTotalGuard: t.labels.descTotalGuard,
+        descDepositGuard: t.labels.descDepositGuard,
+        descBioGuard41: t.labels.descBioGuard41,
+        descBioGuard40: t.labels.descBioGuard40,
+        descCorroGuard: t.labels.descCorroGuard,
+        descBioGuard40Chiller: t.labels.descBioGuard40Chiller,
         date: new Date().toLocaleDateString('en-GB'),
         consumptionCooling: INITIAL_DATA.consumptionCooling,
         consumptionChiller: INITIAL_DATA.consumptionChiller,
