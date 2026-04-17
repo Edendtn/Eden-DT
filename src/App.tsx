@@ -126,6 +126,7 @@ const TRANSLATIONS = {
       tempIn: 'Nhiệt độ vào',
       tempOut: 'Nhiệt độ ra',
       leakage: 'Rò rỉ hệ thống',
+      makeupVol: 'Lượng nước bổ sung',
       dosage: 'Liều dùng (ppm)',
       title: 'Tiêu đề',
       content: 'Nội dung',
@@ -147,7 +148,8 @@ const TRANSLATIONS = {
       deltaT: 'Chênh lệch nhiệt',
       efficiency: 'Hiệu suất',
       powerInput: 'Điện năng tiêu thụ',
-      makeupType: 'Loại nước bổ sung',
+      makeupType: 'Type',
+      makeupTypeChiller: 'Makeup type',
       phLevel: 'Chỉ số pH',
       alkalinity: 'Độ kiềm (M-Alk)',
       lsiIndex: 'Chỉ số LSI',
@@ -240,7 +242,7 @@ const TRANSLATIONS = {
       waterAnalysisCooling: 'Chất lượng nước và tiêu chuẩn kiểm soát nước giải nhiệt',
       chemicalProgram: 'Chương trình hóa chất xử lý',
       chemical: 'Hóa chất',
-      kgInitial: 'Kg/Lần',
+      kgInitial: 'Kg/Lần\n(*)',
       kgDay: 'Kg/D',
       kgMonth: 'Kg/M',
       kgYear: 'Kg/Y',
@@ -326,6 +328,7 @@ const TRANSLATIONS = {
       tempIn: 'Temp In',
       tempOut: 'Temp Out',
       leakage: 'System Leakage',
+      makeupVol: 'Makeup Volume',
       dosage: 'Dosage (ppm)',
       title: 'Title',
       content: 'Content',
@@ -347,7 +350,8 @@ const TRANSLATIONS = {
       deltaT: 'Delta T',
       efficiency: 'Efficiency',
       powerInput: 'Power Input',
-      makeupType: 'Makeup Water Type',
+      makeupType: 'Type',
+      makeupTypeChiller: 'Makeup type',
       phLevel: 'pH Level',
       alkalinity: 'M-Alkalinity',
       lsiIndex: 'LSI Index',
@@ -440,7 +444,7 @@ const TRANSLATIONS = {
       waterAnalysisCooling: 'Water Quality & Control Standards for Cooling',
       chemicalProgram: 'Chemical Treatment Program',
       chemical: 'Chemical',
-      kgInitial: 'Initial',
+      kgInitial: 'Initial\n(*)',
       kgDay: 'Kg/D',
       kgMonth: 'Kg/M',
       kgYear: 'Kg/Y',
@@ -559,6 +563,7 @@ interface ReportData {
   samplingTimeHeader: string;
   samplingNote: string;
   systemLeakage: number;
+  chillerMakeupVolume: string;
   manualLoadPercentage: number;
   summaryTitle: string;
   summaryValue: string;
@@ -673,6 +678,7 @@ const INITIAL_DATA: ReportData = {
   samplingTimeHeader: "Result",
   samplingNote: "Mẫu được lấy ngày 28.03.2026",
   systemLeakage: 0.5,
+  chillerMakeupVolume: "10 m3/month",
   manualLoadPercentage: 85,
   summaryTitle: "System Efficiency Index",
   summaryValue: "85.0",
@@ -1602,6 +1608,7 @@ export default function App() {
                   <InputField label={t.labels.summaryUnit} value={data.summaryUnit} onChange={(v: any) => setData({...data, summaryUnit: v})} />
                   <InputField label="Table Header (Result)" value={data.samplingTimeHeader} onChange={(v: any) => setData({...data, samplingTimeHeader: v})} />
                   <InputField label="Sampling Note" value={data.samplingNote} onChange={(v: any) => setData({...data, samplingNote: v})} />
+                  <InputField label={data.systemType === 'CHILLER' ? t.labels.makeupTypeChiller : t.labels.makeupType} value={data.makeupType} onChange={(v: any) => setData({...data, makeupType: v})} />
                 </div>
               </section>
 
@@ -1627,7 +1634,10 @@ export default function App() {
                   <InputField label={data.systemType === 'CHILLER' ? t.chiller.return : t.labels.tempIn} type="number" suffix={t.units.celsius} value={data.tempIn} onChange={(v: any) => setData({...data, tempIn: v})} />
                   <InputField label={data.systemType === 'CHILLER' ? t.chiller.supply : t.labels.tempOut} type="number" suffix={t.units.celsius} value={data.tempOut} onChange={(v: any) => setData({...data, tempOut: v})} />
                   {data.systemType === 'CHILLER' && (
-                    <InputField label={t.labels.leakage} type="number" suffix={t.units.percentPerMonth} value={data.systemLeakage} onChange={(v: any) => setData({...data, systemLeakage: v})} />
+                    <>
+                      <InputField label={t.labels.leakage} type="number" suffix={t.units.percentPerMonth} value={data.systemLeakage} onChange={(v: any) => setData({...data, systemLeakage: v})} />
+                      <InputField label={t.labels.makeupVol} value={data.chillerMakeupVolume} onChange={(v: any) => setData({...data, chillerMakeupVolume: v})} />
+                    </>
                   )}
                 </div>
               </section>
@@ -2892,7 +2902,10 @@ export default function App() {
                       <DataRow label="Temp. Return" value={formatNumber(data.tempIn) + " °C"} />
                     </>
                   ) : (
-                    <DataRow label={t.labels.leakage} value={formatNumber(data.systemLeakage, 1) + "%/m"} />
+                    <>
+                      <DataRow label={t.labels.leakage} value={formatNumber(data.systemLeakage, 1) + "%/m"} />
+                      <DataRow label={t.labels.makeupVol} value={data.chillerMakeupVolume} />
+                    </>
                   )}
                   <DataRow label={t.labels.hours} value={formatNumber(data.operatingHours) + " h/d"} />
                   <DataRow label={t.labels.operatingDays} value={formatNumber(data.operatingDaysPerMonth) + " d/m"} />
@@ -2979,17 +2992,17 @@ export default function App() {
                       
                       {/* Chilled Water Loop (Evaporator) - Blue */}
                       <path d="M60 45 L-10 45" fill="none" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrow-blue)" />
-                      <text x="-45" y="40" className="text-[8px] font-bold fill-blue-600">{t.chiller.supply}: {data.tempOut > 0 ? `${data.tempOut}°C` : "-"}</text>
+                      <text x="-45" y="40" className="text-[10px] font-bold fill-blue-600">{t.chiller.supply}: {data.tempOut > 0 ? `${data.tempOut}°C` : "-"}</text>
                       
                       <path d="M-10 75 L60 75" fill="none" stroke="#3b82f6" strokeWidth="1.5" markerEnd="url(#arrow-blue)" />
-                      <text x="-45" y="85" className="text-[8px] font-bold fill-blue-600">{t.chiller.return}: {data.tempIn > 0 ? `${data.tempIn}°C` : "-"}</text>
+                      <text x="-45" y="85" className="text-[10px] font-bold fill-blue-600">{t.chiller.return}: {data.tempIn > 0 ? `${data.tempIn}°C` : "-"}</text>
                       
                       {/* Condenser Water Loop - Red/Orange */}
                       <path d="M140 45 L185 45" fill="none" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow-orange)" />
-                      <text x="145" y="40" className="text-[9px] font-bold fill-amber-600">{t.chiller.cwReturn}</text>
+                      <text x="145" y="40" className="text-[10px] font-bold fill-amber-600">{t.chiller.cwReturn}</text>
                       
                       <path d="M185 75 L140 75" fill="none" stroke="#f59e0b" strokeWidth="1.5" markerEnd="url(#arrow-orange)" />
-                      <text x="145" y="85" className="text-[9px] font-bold fill-amber-600">{t.chiller.cwSupply}</text>
+                      <text x="145" y="85" className="text-[10px] font-bold fill-amber-600">{t.chiller.cwSupply}</text>
 
                       <defs>
                         <marker id="arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3" markerHeight="3" orient="auto">
@@ -3015,7 +3028,7 @@ export default function App() {
                       <DataRow label={t.labels.deltaT} value={formatNumber(metrics.deltaT, 1) + " °C"} />
                       <DataRow label={t.labels.load} value={formatNumber(metrics.loadPercentage, 1) + "%"} />
                       <div className="pt-1 mt-1 border-t border-indigo-100 space-y-1.5">
-                        <DataRow label={t.labels.makeupType} value={data.makeupType} boldLabel={true} />
+                        <DataRow label={t.labels.makeupTypeChiller} value={data.makeupType} boldLabel={true} />
                         <DataRow label="pH" value={data.makeupPh} />
                         <DataRow label="EC" value={formatNumber(data.makeupEc) + " µS/cm"} />
                         <DataRow label={t.labels.hardness} value={formatNumber(data.makeupHardness) + " ppm"} />
@@ -3111,16 +3124,18 @@ export default function App() {
                       {language === 'VI' ? 'LIỀU DÙNG' : 'DOSAGE'} <br/> (PPM)
                     </th>
                     {data.systemType === 'CHILLER' && (
-                      <th rowSpan={2} className="p-1 px-1.5 text-[9px] font-black uppercase tracking-widest text-center border-r border-indigo-800/30" style={{ width: '13%' }}>
+                      <th rowSpan={2} className="p-1 px-1.5 text-[9px] font-black uppercase tracking-widest text-center border-r border-indigo-800/30 whitespace-pre-line" style={{ width: '13%' }}>
                         {t.report.kgInitial}
                       </th>
                     )}
-                    <th colSpan={3} className="p-1 text-[9px] font-black uppercase tracking-widest text-center border-b border-indigo-800/30">
+                    <th colSpan={data.systemType === 'CHILLER' ? 2 : 3} className="p-1 text-[9px] font-black uppercase tracking-widest text-center border-b border-indigo-800/30">
                       {language === 'VI' ? 'Tiêu thụ' : 'Consumption'}
                     </th>
                   </tr>
                   <tr className="bg-indigo-900 text-white">
-                    <th className="p-1 text-[9px] font-black uppercase tracking-widest text-center border-r border-indigo-800/30" style={{ width: '13%' }}>{t.report.kgDay}</th>
+                    {data.systemType !== 'CHILLER' && (
+                      <th className="p-1 text-[9px] font-black uppercase tracking-widest text-center border-r border-indigo-800/30" style={{ width: '13%' }}>{t.report.kgDay}</th>
+                    )}
                     <th className="p-1 text-[9px] font-black uppercase tracking-widest text-center border-r border-indigo-800/30" style={{ width: '13%' }}>{t.report.kgMonth}</th>
                     <th className="p-1 text-[9px] font-black uppercase tracking-widest text-center" style={{ width: '14%' }}>{t.report.kgYear}</th>
                   </tr>
@@ -3138,9 +3153,11 @@ export default function App() {
                       {data.systemType === 'CHILLER' && (
                         <td className="p-1 px-1.5 font-semibold text-center">{formatNumber(chem.kgInitial, 1)}</td>
                       )}
-                      <td className="p-1 px-1.5 font-semibold text-center">
-                        {data.systemType === 'COOLING_TOWER' && chem.type === "nonOxidizing" ? "-" : formatNumber(chem.kgDay, 1)}
-                      </td>
+                      {data.systemType !== 'CHILLER' && (
+                        <td className="p-1 px-1.5 font-semibold text-center">
+                          {data.systemType === 'COOLING_TOWER' && chem.type === "nonOxidizing" ? "-" : formatNumber(chem.kgDay, 1)}
+                        </td>
+                      )}
                       <td className="p-1 px-1.5 font-semibold text-center">{formatNumber(chem.kgMonth, 1)}</td>
                       <td className="p-1 px-1.5 font-semibold text-center">{formatNumber(chem.kgYear, 0)}</td>
                     </tr>
@@ -3152,9 +3169,11 @@ export default function App() {
                         {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (c.kgInitial || 0), 0), 1)}
                       </td>
                     )}
-                    <td className="p-1 px-1.5 text-center">
-                      {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.type === "nonOxidizing" ? 0 : c.kgDay), 0), 1)}
-                    </td>
+                    {data.systemType !== 'CHILLER' && (
+                      <td className="p-1 px-1.5 text-center">
+                        {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.type === "nonOxidizing" ? 0 : c.kgDay), 0), 1)}
+                      </td>
+                    )}
                     <td className="p-1 px-1.5 text-center">
                       {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + c.kgMonth, 0), 1)}
                     </td>
