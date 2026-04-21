@@ -603,6 +603,7 @@ interface ReportData {
   descBioGuard40: string;
   descCorroGuard: string;
   descBioGuard40Chiller: string;
+  phosphonateNote: string;
 
   // Consumption Data
   consumptionCooling: ConsumptionSystem[];
@@ -771,6 +772,7 @@ const INITIAL_DATA: ReportData = {
   descBioGuard40: "Diệt vi sinh không oxy hóa, hiệu cao trong việc kiểm soát màng sinh học.",
   descCorroGuard: "Hóa chất ức chế ăn mòn và cáu cặn chuyên dụng cho hệ thống Chiller kín.",
   descBioGuard40Chiller: "Diệt vi sinh không oxy hóa, hiệu cao trong việc kiểm soát màng sinh học.",
+  phosphonateNote: "Note: Application: Stabilized Phosphonate Program",
 
   // Intro Defaults (will be overwritten by translation-based init if needed)
   introAboutTitle: "Culligan - Đối tác Chuyên gia Xử lý Nước Toàn cầu",
@@ -846,7 +848,12 @@ const calculateMetrics = (data: ReportData) => {
         kgDay = 0;
         kgYear = kgMonth * 12;
       } else if (chem.type === "microbiological") {
-        kgMonth = (data.systemVolume * chem.dosage * 2) / 1000;
+        // Special formula for 40H16 in Chiller requested by user
+        if (chem.name.includes("40H16")) {
+          kgMonth = (data.systemVolume * chem.dosage) / 1000;
+        } else {
+          kgMonth = (data.systemVolume * chem.dosage * 2) / 1000;
+        }
         kgDay = kgMonth / 30;
         kgYear = kgMonth * 12;
       }
@@ -863,7 +870,7 @@ const calculateMetrics = (data: ReportData) => {
         kgYear = kgMonth * 12;
       } else if (chem.type === "oxidizing") {
         if (chem.name.toUpperCase().includes("NAOCL")) {
-          kgDay = ((chem.dosage/10) * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * data.operatingHours) / 1000;
+          kgDay = (chem.dosage * 1.1 * data.circulationFlow * (data.manualLoadPercentage / 100) * data.operatingHours) / 1000;
           kgMonth = kgDay * data.operatingDaysPerMonth;
           kgYear = kgMonth * 12;
         } else {
@@ -872,9 +879,15 @@ const calculateMetrics = (data: ReportData) => {
           kgYear = kgMonth * 12;
         }
       } else if (chem.type === "nonOxidizing") {
-        kgMonth = (chem.dosage * data.systemVolume * 2) / 1000;
-        kgDay = 0; 
-        kgYear = kgMonth * 12;
+        if (data.systemType === 'COOLING_TOWER' && chem.name.includes("40H16")) {
+          kgDay = (chem.dosage * blowdown * data.operatingHours) / 1000;
+          kgMonth = kgDay * data.operatingDaysPerMonth;
+          kgYear = kgMonth * 12;
+        } else {
+          kgMonth = (chem.dosage * data.systemVolume * 2) / 1000;
+          kgDay = 0; 
+          kgYear = kgMonth * 12;
+        }
       } else {
         kgDay = chem.kgDay;
         kgMonth = kgDay * data.operatingDaysPerMonth;
@@ -1886,6 +1899,16 @@ export default function App() {
                       <InputField label={t.labels.dosage} type="number" value={chem.dosage} onChange={(v: any) => updateChemical(i, 'dosage', v)} />
                     </div>
                   ))}
+
+                  {data.systemType === 'COOLING_TOWER' && (
+                    <div className="p-3 bg-indigo-50/50 rounded-lg border border-indigo-100">
+                      <InputField 
+                        label="Chemical Program Footnote" 
+                        value={data.phosphonateNote} 
+                        onChange={(v: string) => setData({...data, phosphonateNote: v})} 
+                      />
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -1926,9 +1949,9 @@ export default function App() {
                     })} 
                   />
                 </div>
-              </section>
-            </>
-          ) : activeTab === 'consumption' ? (
+                  </section>
+              </>
+            ) : activeTab === 'consumption' ? (
             <div className="space-y-6">
               <div className="flex items-center gap-2 text-indigo-600 mb-6">
                 <Calculator className="w-5 h-5" />
@@ -1973,7 +1996,24 @@ export default function App() {
                 {/* Global Chemical Selection for Cooling */}
                 <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl space-y-4">
                   <h3 className="text-[10px] font-black uppercase text-indigo-900 tracking-widest">Cấu hình hóa chất Cooling</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Chemical Program Settings</div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest mb-1.5 block">Phosphonate Program Note</label>
+                          <input 
+                            type="text"
+                            value={data.phosphonateNote}
+                            onChange={(e) => setData({ ...data, phosphonateNote: e.target.value })}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold"
+                            placeholder="Application: Stabilized Phosphonate Program"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold text-slate-500 uppercase">Total Guard</label>
                       <select 
@@ -1998,6 +2038,7 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+              </div>
 
                 {/* Cooling Water Section */}
                 <div className="space-y-4">
@@ -3256,13 +3297,17 @@ export default function App() {
                           {t.chemicals[chem.type as keyof typeof t.chemicals] || chem.type}
                         </div>
                       </td>
-                      <td className="p-1 px-1.5 font-semibold text-center">{formatDisplayValue(chem.dosage)}</td>
+                      <td className="p-1 px-1.5 font-semibold text-center">
+                        {chem.name.toUpperCase().includes("NAOCL") 
+                          ? `${formatDisplayValue(chem.dosage)} (CW)` 
+                          : formatDisplayValue(chem.dosage)}
+                      </td>
                       {data.systemType === 'CHILLER' && (
                         <td className="p-1 px-1.5 font-semibold text-center">{formatNumber(chem.kgInitial, 1)}</td>
                       )}
                       {data.systemType !== 'CHILLER' && (
                         <td className="p-1 px-1.5 font-semibold text-center">
-                          {data.systemType === 'COOLING_TOWER' && chem.type === "nonOxidizing" ? "-" : formatNumber(chem.kgDay, 1)}
+                          {data.systemType === 'COOLING_TOWER' && chem.type === "nonOxidizing" && !chem.name.includes("40H16") ? "-" : formatNumber(chem.kgDay, 1)}
                         </td>
                       )}
                       <td className="p-1 px-1.5 font-semibold text-center">{formatNumber(chem.kgMonth, 1)}</td>
@@ -3278,7 +3323,7 @@ export default function App() {
                     )}
                     {data.systemType !== 'CHILLER' && (
                       <td className="p-1 px-1.5 text-center">
-                        {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.type === "nonOxidizing" ? 0 : c.kgDay), 0), 1)}
+                        {formatNumber(metrics.updatedChemicals.filter(c => c.dosage > 0).reduce((acc, c) => acc + (data.systemType === 'COOLING_TOWER' && c.type === "nonOxidizing" && !c.name.includes("40H16") ? 0 : c.kgDay), 0), 1)}
                       </td>
                     )}
                     <td className="p-1 px-1.5 text-center">
@@ -3290,6 +3335,12 @@ export default function App() {
                   </tr>
                 </tbody>
               </table>
+
+              {data.systemType === 'COOLING_TOWER' && (
+                <div className="mt-1 text-[9px] font-black text-indigo-900 border-l-2 border-indigo-600 pl-2">
+                  {data.phosphonateNote}
+                </div>
+              )}
 
               <div className="mt-1.5 p-1.5 bg-slate-50 border border-slate-200 rounded">
                 <div className="text-[9px] font-black text-indigo-900 uppercase mb-0.5">{t.sections.notes}</div>
