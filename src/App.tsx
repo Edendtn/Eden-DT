@@ -926,7 +926,7 @@ const InputField = ({ label, value, onChange, type = "text", suffix = "" }: any)
   const displayValue = isFocused || type !== "number" 
     ? (value ?? "") 
     : (value !== null && value !== undefined && value !== "" && !isNaN(Number(value)) 
-        ? new Intl.NumberFormat('en-US').format(Number(value)) 
+        ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 10 }).format(Number(value)) 
         : (value ?? ""));
 
   return (
@@ -3046,8 +3046,8 @@ export default function App() {
                     <>
                       <DataRow label={t.labels.load} value={formatNumber(metrics.loadPercentage, 1) + "%"} />
                       <DataRow label={t.labels.coc} value={formatNumber(metrics.calculatedCoc, 1)} />
-                      <DataRow label="Temp. Supply" value={formatNumber(data.tempOut) + " °C"} />
-                      <DataRow label="Temp. Return" value={formatNumber(data.tempIn) + " °C"} />
+                      <DataRow label="Temp. Supply" value={formatNumber(data.tempOut, 1) + " °C"} />
+                      <DataRow label="Temp. Return" value={formatNumber(data.tempIn, 1) + " °C"} />
                     </>
                   ) : (
                     <>
